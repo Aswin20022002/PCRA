@@ -54,13 +54,14 @@ Write factual, location-specific assessments — never generic.
 Respond in 3–5 plain sentences, no JSON, no bullet points, no preamble.`;
 
   const usr = `Summarise the overall physical climate risk profile for PIN code ${pin} (${district}, ${state}, India).
-Composite risk score: ${composite}/100 — ${ovrLabel}.
-Individual hazard scores: ${scoreLines}.
+Overall IPCC composite risk score (Hazard + Exposure + Vulnerability, equal thirds): ${composite}/100 — ${ovrLabel}.
+Scores: ${scoreLines}.
 
 Your summary must:
-1. Explain the dominant climate hazard and WHY this location is exposed (geography, climate zone, history).
-2. Name the top 1–2 specific risks and their practical impact.
-3. Give a clear overall risk verdict for this area.
+1. State the overall risk level and what combination of hazard, exposure, and vulnerability drives it.
+2. Name the dominant hazard and WHY this location is exposed (geography, climate zone, history).
+3. Comment on exposure (population/asset density) and vulnerability (social fragility) if they meaningfully raise or lower risk.
+4. Give a clear, actionable overall risk verdict.
 
 Return only plain text, 3–5 sentences.`;
 
@@ -85,35 +86,6 @@ Explain:
   return { sys, usr };
 }
 
-function buildNewsPrompt({ district, state, pin, topHazards }) {
-  const hazardStr = Array.isArray(topHazards) && topHazards.length
-    ? topHazards.join(' and ')
-    : 'general climate hazards';
-
-  const sys = `You are a climate news researcher for India. 
-Return ONLY a valid JSON array — no markdown fences, no explanation, no preamble.
-Each item must have exactly: headline (string), summary (string, 1–2 sentences), 
-type (one of: flood/heat/cyclone/drought/storm/fire/other), date (string like "Mar 2025"), 
-source (string), url (string, real or plausible news URL or empty string).`;
-
-  const usr = `Find 4 recent (2024–2025) news items about climate or weather events relevant to ${district}, ${state}, India.
-Focus on: ${hazardStr}.
-Be specific to ${district} or ${state} — not generic India-wide news.
-
-Return ONLY a JSON array like:
-[
-  {
-    "headline": "...",
-    "summary": "...",
-    "type": "flood",
-    "date": "Jul 2025",
-    "source": "Times of India",
-    "url": "https://timesofindia.indiatimes.com/..."
-  }
-]`;
-
-  return { sys, usr };
-}
 
 function buildInfraPrompt({ prompt }) {
   // The prompt is pre-built by the frontend
@@ -219,41 +191,180 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ text }) };
     }
 
-    // ── News items ────────────────────────────────────────────────────────
-    if (type === 'news') {
-      const { sys, usr } = buildNewsPrompt(payload);
-      const raw = await callGroq(sys, usr, { maxTokens: 900, temperature: 0.4 });
+    // ── Climate news via Google News RSS — district-locked, tiered queries ───
+    if (type === 'rss') {
+      const { district, state } = payload;
+      if (!district || !state) return { statusCode: 200, headers: CORS, body: JSON.stringify({ items: [] }) };
 
-      // Strip possible markdown fences
-      const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-      let items;
-      try {
-        items = JSON.parse(cleaned);
-        if (!Array.isArray(items)) throw new Error('Not an array');
-      } catch (parseErr) {
-        // Try to extract JSON array from anywhere in the response
-        const match = cleaned.match(/\[[\s\S]*\]/);
-        if (match) {
-          items = JSON.parse(match[0]);
-        } else {
-          throw new Error('Could not parse news JSON: ' + parseErr.message);
+      // ── IPCC framework keyword sets ─────────────────────────────────────────
+      const hazardKeywords = [
+        'flood','cyclone','drought','heatwave','heat wave','landslide','heavy rain',
+        'extreme rain','inundat','disaster','submerged','casualt','deaths',
+        'ndrf','red alert','orange alert','cloudburst','waterlog','storm surge',
+        'evacuate','relief camp','crop loss','dam overflow','flash flood',
+      ];
+      const vulnerabilityKeywords = [
+        'slum','informal settlement','migrant worker','climate migrant','climate refugee',
+        'food insecurity','water scarcity','water crisis','drought-hit farmer',
+        'displaced','homeless','urban poor','rural poor','marginalised',
+        'heat illness','heat stroke','heat death','vector-borne',
+        'dengue outbreak','malaria surge','hospital overwhelm',
+      ];
+      const exposureKeywords = [
+        'coastal erosion','sea level','river bank erosion','flood plain',
+        'flood zone','flood-prone','risk zone','agricultural loss','crop damage',
+        'infrastructure damage','bridge collapse','road damage','power outage',
+        'village submerged','homes destroyed','houses damaged','population affected',
+        'lakh affected','thousand affected','displaced families',
+      ];
+
+      const rejectKeywords = [
+        'crop variet','seed variet','icar','election','poll','budget','subsid',
+        'inaugurate','scheme','yojana','tender','contract','gdp','stock','sensex',
+      ];
+
+      const fiveYearsAgo = new Date();
+      fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+      const afterDate = fiveYearsAgo.toISOString().split('T')[0];
+
+      const hazardTiers = [
+        { q: `"${district}" flood OR cyclone OR landslide OR heatwave OR drought disaster after:${afterDate}`, mustMentionDistrict: true },
+        { q: `"${district}" "heavy rain" OR "red alert" OR inundated OR cloudburst OR NDRF after:${afterDate}`, mustMentionDistrict: true },
+        { q: `${district} ${state} flood OR cyclone OR landslide OR heatwave OR disaster after:${afterDate}`, mustMentionDistrict: true },
+        { q: `${state} flood OR cyclone OR landslide OR heatwave disaster casualty after:${afterDate}`, mustMentionDistrict: false },
+      ];
+      const vulnExposureTiers = [
+        { q: `"${district}" "crop damage" OR "houses damaged" OR "village submerged" OR "flood plain" OR "coastal erosion" after:${afterDate}`, mustMentionDistrict: true },
+        { q: `"${district}" "heat stroke" OR "water crisis" OR "water scarcity" OR "climate migrant" OR displaced after:${afterDate}`, mustMentionDistrict: true },
+        { q: `${district} ${state} "crop damage" OR "houses damaged" OR "water scarcity" OR displaced after:${afterDate}`, mustMentionDistrict: true },
+        { q: `${state} "crop damage" OR "water crisis" OR "heat stroke" OR displaced disaster after:${afterDate}`, mustMentionDistrict: false },
+      ];
+
+      const districtLower = district.toLowerCase();
+      const normalise = t => t.toLowerCase().replace(/[^a-z\s]/g,'').replace(/\s+/g,' ').trim().slice(0,60);
+      const seenTitles = new Set();
+
+      const cleanDesc = raw => raw
+        .replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/https?:\/\/[^\s"<>]+/g, '')
+        .replace(/href\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 220);
+
+      const fetchTier = async (tier, allowedKeywords) => {
+        const results = [];
+        try {
+          const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(tier.q)}&hl=en-IN&gl=IN&ceid=IN:en`;
+          const resp = await fetch(rssUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ClimateRiskBot/1.0)' } });
+          if (!resp.ok) return results;
+          const xml = await resp.text();
+
+          const itemRx = /<item>([\s\S]*?)<\/item>/g;
+          let m;
+          while ((m = itemRx.exec(xml)) !== null) {
+            const b = m[1];
+            const get = tag => {
+              const r = b.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`));
+              return r ? (r[1]||r[2]||'').trim() : '';
+            };
+            const rawTitle = get('title');
+            const link     = (b.match(/<link>([^<]+)/) || [])[1] || get('link') || '';
+            const pubDate  = get('pubDate');
+            const desc     = cleanDesc(get('description'));
+            const srcMatch = rawTitle.match(/ - ([^-]+)$/);
+            const title  = srcMatch ? rawTitle.slice(0, rawTitle.lastIndexOf(' - ')).trim() : rawTitle;
+            const source = srcMatch ? srcMatch[1].trim() : '';
+            if (!title) continue;
+            const fullText = (title + ' ' + desc).toLowerCase();
+            if (!allowedKeywords.some(kw => fullText.includes(kw))) continue;
+            if (rejectKeywords.some(kw => fullText.includes(kw))) continue;
+            if (tier.mustMentionDistrict && !fullText.includes(districtLower)) continue;
+            const norm = normalise(title);
+            if ([...seenTitles].some(s => {
+              const wa = new Set(norm.split(' ')), wb = s.split(' ');
+              return wb.filter(w => wa.has(w)).length / Math.max(wb.length,1) > 0.6;
+            })) continue;
+            const pillar = hazardKeywords.some(kw => fullText.includes(kw)) ? 'hazard'
+              : exposureKeywords.some(kw => fullText.includes(kw)) ? 'exposure'
+              : 'vulnerability';
+            seenTitles.add(norm);
+            results.push({ title, link, pubDate, description: desc, source, pillar });
+          }
+        } catch(e) {}
+        return results;
+      };
+
+      // ── Collect hazard pool (up to 8 candidates) ───────────────────────────
+      let hazardPool = [];
+      for (const tier of hazardTiers) {
+        if (!tier.mustMentionDistrict && hazardPool.length >= 3) continue;
+        if (hazardPool.length >= 8) break;
+        hazardPool.push(...await fetchTier(tier, hazardKeywords));
+      }
+      hazardPool.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+
+      // ── Collect vuln/exposure pool (up to 4 candidates) ───────────────────
+      let vulnPool = [];
+      const vulnAllowed = [...vulnerabilityKeywords, ...exposureKeywords];
+      for (const tier of vulnExposureTiers) {
+        if (!tier.mustMentionDistrict && vulnPool.length >= 1) continue;
+        if (vulnPool.length >= 4) break;
+        vulnPool.push(...await fetchTier(tier, vulnAllowed));
+      }
+      vulnPool.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+
+      // ── Merge: hazard always fills slots 1-3; slots 4-5 go to whichever
+      //    pool has the more recent article — but vuln/exposure capped at 2 ──
+      const top3Hazard = hazardPool.slice(0, 3);
+      const remaining = hazardPool.slice(3); // leftover hazard candidates for slots 4-5
+      const topVuln   = vulnPool.slice(0, 2);
+
+      // Interleave remaining hazard vs vuln/exposure by recency for slots 4-5
+      const candidates45 = [...remaining, ...topVuln]
+        .sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+
+      // Cap vuln/exposure at 2 in final 5
+      let vulnCount = 0;
+      const slots45 = [];
+      for (const item of candidates45) {
+        if (slots45.length >= 2) break;
+        if (item.pillar !== 'hazard') {
+          if (vulnCount >= 2) continue;
+          vulnCount++;
+        }
+        slots45.push(item);
+      }
+
+      const finalItems = [...top3Hazard, ...slots45];
+
+      // ── Generate AI summaries ───────────────────────────────────────────────
+      if (finalItems.length > 0) {
+        try {
+          const titlesJson = JSON.stringify(finalItems.map((it, i) => ({ i, title: it.title })));
+          const summaryRaw = await callGroq(
+            `You are a climate news summariser for India. Given news headlines, write one informative sentence (25-35 words) per headline capturing: what disaster or event occurred, exactly where, and its key impact or scale such as deaths, villages affected, or alerts issued. Be specific, never vague or generic. Return ONLY a JSON array with keys "i" (number) and "summary" (string). No markdown, no preamble.`,
+            `Headlines: ${titlesJson}`,
+            { maxTokens: 800, temperature: 0.3 }
+          );
+          const cleanedS = summaryRaw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+          const arrMatch = cleanedS.match(/\[[\s\S]*\]/);
+          if (arrMatch) {
+            const parsed = JSON.parse(arrMatch[0]);
+            parsed.forEach(({ i, summary }) => {
+              if (finalItems[i]) finalItems[i].description = summary || '';
+            });
+          }
+        } catch(e) {
+          finalItems.forEach(it => { it.description = ''; });
         }
       }
 
-      // Sanitise items
-      items = items.slice(0, 4).map(item => ({
-        headline: String(item.headline || 'Climate event').slice(0, 160),
-        summary:  String(item.summary  || '').slice(0, 300),
-        type:     ['flood','heat','cyclone','drought','storm','fire','other'].includes(item.type) ? item.type : 'other',
-        date:     String(item.date   || '2025').slice(0, 20),
-        source:   String(item.source || 'News').slice(0, 80),
-        url:      String(item.url    || '').startsWith('http') ? item.url : '',
-      }));
-
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ items }) };
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ items: finalItems }) };
     }
 
-    // ── Infrastructure panel ──────────────────────────────────────────────
+        // ── Infrastructure panel ────────────────────────────────────────────── ──────────────────────────────────────────────
     if (type === 'infra') {
       const { sys, usr } = buildInfraPrompt(payload);
       const raw = await callGroq(sys, usr, { maxTokens: 700, temperature: 0.3 });

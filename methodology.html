@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Methodology — India Physical Climate Risk Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:      #0d2340;
+  --navy-mid:  #1a3a5c;
+  --navy-lt:   #234b73;
+  --amber:     #b8860b;
+  --amber-lt:  #f5a623;
+  --amber-dim: rgba(184,134,11,0.15);
+  --white:     #ffffff;
+  --off-white: #f5f4f0;
+  --text:      #1a1814;
+  --text-2:    #4a453d;
+  --text-3:    #7a7268;
+  --rule:      #d9d5ce;
+  --risk-vh:   #8b0000;
+  --risk-h:    #c0392b;
+  --risk-m:    #b8860b;
+  --risk-l:    #2e7d32;
+  --risk-vl:   #1565c0;
+  --flood:     #1565c0;
+  --heat:      #c0392b;
+  --cyclone:   #6a1b9a;
+  --drought:   #d84315;
+  --rainfall:  #00695c;
+  --gsi:       #37474f;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--off-white);color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;line-height:1.65;}
+
+/* ── HEADER ── */
+header{background:var(--navy);border-bottom:3px solid var(--amber);position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1180px;margin:0 auto;padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo-block{display:flex;align-items:baseline;gap:0.65rem;}
+.logo-mark{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.2rem;letter-spacing:0.08em;color:#fff;text-transform:uppercase;}
+.logo-sub{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--amber-lt);font-weight:500;}
+.back-link{font-size:0.8rem;color:rgba(255,255,255,0.5);text-decoration:none;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:0.4rem;transition:color 0.2s;}
+.back-link:hover{color:var(--amber-lt);}
+
+/* ── HERO ── */
+.hero{background:var(--navy);padding:4rem 2rem 3.5rem;text-align:center;border-bottom:1px solid rgba(255,255,255,0.08);}
+.hero-inner{max-width:740px;margin:0 auto;}
+.hero-label{font-size:0.7rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--amber-lt);font-weight:600;margin-bottom:0.75rem;}
+.hero-title{font-family:'EB Garamond',serif;font-size:clamp(2.2rem,5vw,3.2rem);color:#fff;line-height:1.15;margin-bottom:1rem;}
+.hero-sub{font-size:1rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:600px;margin:0 auto 2rem;}
+.hero-formula{display:inline-flex;align-items:center;gap:0.75rem;background:rgba(184,134,11,0.15);border:1px solid rgba(184,134,11,0.35);border-radius:4px;padding:0.75rem 1.5rem;flex-wrap:wrap;justify-content:center;}
+.formula-text{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:500;color:var(--amber-lt);}
+.formula-cite{font-size:0.72rem;color:rgba(255,255,255,0.4);letter-spacing:0.06em;}
+
+/* ── NAV ── */
+.toc-bar{background:#fff;border-bottom:1px solid var(--rule);position:sticky;top:60px;z-index:90;overflow-x:auto;}
+.toc-inner{max-width:1180px;margin:0 auto;padding:0 2rem;display:flex;gap:0;white-space:nowrap;}
+.toc-link{font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-3);text-decoration:none;padding:0.75rem 1.1rem;border-bottom:2px solid transparent;transition:color 0.2s,border-color 0.2s;}
+.toc-link:hover{color:var(--navy);border-bottom-color:var(--amber);}
+.toc-link.active{color:var(--navy);border-bottom-color:var(--amber);}
+
+/* ── CONTENT ── */
+.page{max-width:1180px;margin:0 auto;padding:0 2rem 5rem;}
+
+/* ── SECTION TITLES ── */
+.section{padding:3.5rem 0 0;border-top:1px solid var(--rule);margin-top:3.5rem;}
+.section:first-child{border-top:none;margin-top:0;}
+.section-eyebrow{font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:0.5rem;}
+.section-title{font-family:'EB Garamond',serif;font-size:clamp(1.6rem,3vw,2.2rem);color:var(--navy);margin-bottom:0.5rem;line-height:1.2;}
+.section-sub{font-size:0.95rem;color:var(--text-2);max-width:680px;line-height:1.7;margin-bottom:2rem;}
+
+/* ── PILLARS ── */
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:2rem;}
+@media(max-width:700px){.pillars{grid-template-columns:1fr;}}
+.pillar{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1.5rem;border-top:4px solid transparent;}
+.pillar.hazard{border-top-color:var(--risk-h);}
+.pillar.exposure{border-top-color:var(--risk-vl);}
+.pillar.vulnerability{border-top-color:var(--risk-l);}
+.pillar-icon{font-size:1.6rem;margin-bottom:0.5rem;}
+.pillar-name{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--navy);margin-bottom:0.25rem;}
+.pillar-weight{font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:0.65rem;font-weight:600;}
+.pillar-desc{font-size:0.88rem;color:var(--text-2);line-height:1.6;}
+
+/* ── HAZARD GRID ── */
+.hazard-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;}
+@media(max-width:900px){.hazard-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.hazard-grid{grid-template-columns:1fr;}}
+.hazard-card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1.25rem 1.4rem;cursor:pointer;transition:border-color 0.2s,transform 0.15s,box-shadow 0.2s;position:relative;overflow:hidden;}
+.hazard-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.hazard-card.flood::before{background:var(--flood);}
+.hazard-card.heat::before{background:var(--heat);}
+.hazard-card.cyclone::before{background:var(--cyclone);}
+.hazard-card.drought::before{background:var(--drought);}
+.hazard-card.rainfall::before{background:var(--rainfall);}
+.hazard-card.gsi::before{background:var(--gsi);}
+.hazard-card:hover{border-color:var(--amber);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.08);}
+.hazard-card.active{border-color:var(--amber);box-shadow:0 0 0 2px rgba(184,134,11,0.2);}
+.hazard-icon{font-size:1.4rem;margin-bottom:0.5rem;}
+.hazard-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;letter-spacing:0.04em;text-transform:uppercase;color:var(--navy);margin-bottom:0.2rem;}
+.hazard-tagline{font-size:0.8rem;color:var(--text-3);line-height:1.45;}
+.expand-arrow{position:absolute;right:1rem;top:1.1rem;font-size:0.8rem;color:var(--text-3);transition:transform 0.3s;}
+.hazard-card.active .expand-arrow{transform:rotate(90deg);}
+
+/* ── HAZARD DETAIL PANEL ── */
+.hazard-detail{display:none;background:#fff;border:1px solid var(--amber);border-radius:6px;padding:2rem 2.25rem;margin-bottom:1.5rem;animation:fadeIn 0.25s ease;}
+.hazard-detail.visible{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.detail-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem;}
+.detail-icon{font-size:2.2rem;line-height:1;}
+.detail-title-block{}
+.detail-title{font-family:'EB Garamond',serif;font-size:1.5rem;color:var(--navy);margin-bottom:0.2rem;}
+.detail-version{font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);}
+.formula-box{background:var(--navy);color:var(--amber-lt);font-family:'JetBrains Mono',monospace;font-size:0.9rem;padding:0.85rem 1.25rem;border-radius:4px;margin-bottom:1.5rem;line-height:1.7;}
+.indicators-table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:1.5rem;}
+.indicators-table th{background:var(--off-white);color:var(--text-3);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:600;padding:0.55rem 0.9rem;text-align:left;border-bottom:2px solid var(--rule);}
+.indicators-table td{padding:0.6rem 0.9rem;border-bottom:1px solid var(--rule-light,#ece9e3);color:var(--text-2);vertical-align:top;}
+.indicators-table tr:last-child td{border-bottom:none;}
+.weight-chip{display:inline-block;background:var(--amber-dim);color:var(--amber);font-weight:700;font-size:0.78rem;padding:0.15rem 0.55rem;border-radius:20px;font-family:'JetBrains Mono',monospace;}
+.weight-chip.trend{background:rgba(99,60,180,0.1);color:#6330b8;}
+.detail-rationale{background:var(--off-white);border-left:3px solid var(--amber);padding:0.85rem 1.1rem;border-radius:0 4px 4px 0;font-size:0.87rem;color:var(--text-2);line-height:1.65;font-style:italic;}
+.sources-row{display:flex;flex-wrap:wrap;gap:0.6rem;margin-top:1.25rem;}
+.source-chip{background:var(--navy);color:rgba(255,255,255,0.7);font-size:0.75rem;padding:0.3rem 0.75rem;border-radius:20px;letter-spacing:0.04em;}
+
+/* ── SCORING FRAMEWORK TABLE ── */
+.fw-table{width:100%;border-collapse:collapse;margin-bottom:1.5rem;}
+.fw-table th{background:var(--navy);color:rgba(255,255,255,0.7);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.7rem 1rem;text-align:left;}
+.fw-table td{padding:0.75rem 1rem;border-bottom:1px solid var(--rule);font-size:0.88rem;color:var(--text-2);vertical-align:top;}
+.fw-table tr:last-child td{border-bottom:none;}
+.fw-table tr:nth-child(even) td{background:rgba(0,0,0,0.02);}
+
+/* ── VULNERABILITY ── */
+.vuln-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem;}
+@media(max-width:600px){.vuln-grid{grid-template-columns:1fr;}}
+.vuln-card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1.25rem;}
+.vuln-card-header{display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.65rem;}
+.vuln-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.vuln-icon.stunt{background:#faeeda;}
+.vuln-icon.lit{background:#e6f1fb;}
+.vuln-icon.san{background:#eaf3de;}
+.vuln-icon.mar{background:#fcebeb;}
+.vuln-title{font-weight:700;font-size:0.92rem;color:var(--navy);line-height:1.3;}
+.vuln-source{font-size:0.75rem;color:var(--text-3);margin-top:2px;}
+.vuln-body{font-size:0.83rem;color:var(--text-2);line-height:1.6;margin-bottom:0.6rem;}
+.dir-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;padding:2px 10px;border-radius:20px;font-weight:600;}
+.dir-high{background:#fcebeb;color:#a32d2d;}
+.dir-low{background:#eaf3de;color:#3b6d11;}
+
+/* ── EXPOSURE ── */
+.exp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;}
+@media(max-width:700px){.exp-grid{grid-template-columns:1fr;}}
+.exp-card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1.25rem;text-align:center;}
+.exp-card-icon{font-size:1.8rem;margin-bottom:0.5rem;}
+.exp-card-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--navy);margin-bottom:0.25rem;}
+.exp-card-source{font-size:0.75rem;color:var(--text-3);margin-bottom:0.6rem;}
+.exp-card-body{font-size:0.82rem;color:var(--text-2);line-height:1.55;}
+
+/* ── WEIGHT BARS ── */
+.weight-bars{display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.5rem;}
+.weight-row{display:flex;align-items:center;gap:0.75rem;}
+.weight-label{font-size:0.88rem;color:var(--text-2);flex:1;}
+.weight-bar-track{flex:2;height:6px;background:var(--rule);border-radius:3px;overflow:hidden;}
+.weight-bar-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+.weight-pct{font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--text-3);min-width:38px;text-align:right;}
+
+/* ── DATA SOURCES ── */
+.sources-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.85rem;margin-bottom:1.5rem;}
+@media(max-width:800px){.sources-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:500px){.sources-grid{grid-template-columns:1fr;}}
+.src-card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1rem 1.1rem;display:flex;gap:0.75rem;align-items:flex-start;text-decoration:none;color:inherit;transition:border-color 0.2s,transform 0.15s,box-shadow 0.2s;}
+a.src-card:hover{border-color:var(--amber);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.07);}
+.src-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.src-name{font-size:0.88rem;font-weight:600;color:var(--navy);margin-bottom:0.2rem;}
+.src-desc{font-size:0.78rem;color:var(--text-3);line-height:1.45;}
+
+/* ── VINTAGE ── */
+.vintage-row{display:flex;flex-wrap:wrap;gap:1.5rem;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1.25rem 1.5rem;margin-bottom:2rem;}
+.vintage-item{}
+.vintage-label{font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:0.15rem;}
+.vintage-val{font-size:1rem;font-weight:600;color:var(--navy);}
+
+/* ── CLASSIFICATION ── */
+.risk-bands{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+.risk-band{flex:1;min-width:120px;padding:1rem;border-radius:4px;text-align:center;}
+.risk-band-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;color:#fff;margin-bottom:0.3rem;}
+.risk-band-range{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:500;color:rgba(255,255,255,0.9);}
+.rb-vh{background:var(--risk-vh);}
+.rb-h{background:var(--risk-h);}
+.rb-m{background:var(--risk-m);}
+.rb-l{background:var(--risk-l);}
+.rb-vl{background:var(--risk-vl);}
+
+/* ── CALLOUT ── */
+.callout{background:var(--off-white);border:1px solid var(--rule);border-left:4px solid var(--amber);border-radius:0 6px 6px 0;padding:1rem 1.25rem;font-size:0.87rem;color:var(--text-2);line-height:1.65;margin-bottom:1.5rem;}
+.callout strong{color:var(--navy);}
+
+/* ── FOOTER ── */
+footer{background:var(--navy);padding:2rem;text-align:center;margin-top:0;}
+.footer-note{font-size:0.75rem;color:rgba(255,255,255,0.3);line-height:1.65;}
+
+/* ── ACCORDION ── */
+.rule-light{color:var(--rule-light,#ece9e3);}
+
+/* ── MOBILE TABLE FIX ── */
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:1.5rem;}
+.table-scroll table{min-width:560px;}
+@media(max-width:700px){
+  .hazard-detail{padding:1.25rem 1rem;}
+  .indicators-table th,.indicators-table td{padding:0.5rem 0.6rem;font-size:0.8rem;}
+  .fw-table th,.fw-table td{padding:0.5rem 0.6rem;font-size:0.8rem;}
+}
+
+/* ── CTA BANNER ── */
+.cta-banner{background:var(--navy);border-radius:8px;padding:2.5rem 2rem;text-align:center;margin:3rem 0 0;}
+.cta-title{font-family:'EB Garamond',serif;font-size:1.6rem;color:#fff;margin-bottom:0.5rem;}
+.cta-sub{font-size:0.92rem;color:rgba(255,255,255,0.5);margin-bottom:1.5rem;}
+.cta-btn{display:inline-block;background:var(--amber);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.95rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.75rem 2rem;border-radius:4px;text-decoration:none;transition:background 0.2s;}
+.cta-btn:hover{background:var(--amber-lt);}
+
+/* ── LIMITATIONS ── */
+.limit-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem;}
+@media(max-width:650px){.limit-grid{grid-template-columns:1fr;}}
+.limit-card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1.25rem;border-left:4px solid var(--text-3);}
+.limit-card.data{border-left-color:#1565c0;}
+.limit-card.spatial{border-left-color:#6a1b9a;}
+.limit-card.temporal{border-left-color:#d84315;}
+.limit-card.scope{border-left-color:#2e7d32;}
+.limit-card.model{border-left-color:#b8860b;}
+.limit-card.vuln{border-left-color:#c0392b;}
+.limit-tag{font-size:0.65rem;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;color:var(--text-3);margin-bottom:0.35rem;}
+.limit-title{font-size:0.95rem;font-weight:700;color:var(--navy);margin-bottom:0.4rem;}
+.limit-body{font-size:0.83rem;color:var(--text-2);line-height:1.6;}
+
+/* ── FAQ ── */
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ── DISCLAIMER ── */
+.disclaimer-box{background:var(--navy);border-radius:8px;padding:2.5rem 2.5rem;margin-bottom:1.5rem;}
+.disclaimer-box h3{font-family:'EB Garamond',serif;font-size:1.25rem;color:#fff;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.6rem;}
+.disclaimer-item{display:flex;gap:1rem;margin-bottom:1.1rem;padding-bottom:1.1rem;border-bottom:1px solid rgba(255,255,255,0.08);}
+.disclaimer-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.disclaimer-number{font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--amber-lt);flex-shrink:0;padding-top:2px;min-width:20px;}
+.disclaimer-text{font-size:0.85rem;color:rgba(255,255,255,0.65);line-height:1.7;}
+.disclaimer-text strong{color:rgba(255,255,255,0.9);font-weight:600;}
+.disclaimer-legal{margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.12);font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.65;font-style:italic;}
+
+/* ── ACKNOWLEDGEMENTS ── */
+.ack-list{display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem;}
+.ack-card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1.25rem 1.4rem;}
+.ack-header{display:flex;align-items:center;gap:0.65rem;margin-bottom:0.6rem;}
+.ack-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.ack-name{font-size:0.92rem;font-weight:700;color:var(--navy);}
+.ack-body{font-size:0.82rem;color:var(--text-2);line-height:1.7;}
+.ack-body a{color:var(--amber);text-decoration:none;}
+.ack-body a:hover{text-decoration:underline;}
+.ack-body em{font-style:italic;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-block">
+      <div>
+        <div class="logo-mark">Physical Risk</div>
+        <div class="logo-sub">India Climate Intelligence</div>
+      </div>
+    </div>
+    <a href="index.html" class="back-link">← Back to Explorer</a>
+  </div>
+</header>
+
+<nav class="toc-bar">
+  <div class="toc-inner">
+    <a class="toc-link" href="#scoring-framework">Scoring Framework</a>
+    <a class="toc-link" href="#hazard-scores">Hazard Scores</a>
+    <a class="toc-link" href="#exposure">Exposure</a>
+    <a class="toc-link" href="#vulnerability">Vulnerability</a>
+    <a class="toc-link" href="#data-sources">Data Sources</a>
+    <a class="toc-link" href="#risk-classification">Risk Classification</a>
+    <a class="toc-link" href="#acknowledgements">Acknowledgements</a>
+    <a class="toc-link" href="#disclaimer">Disclaimer</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">Scoring Methodology — v5 IPCC-INFORM Aligned</div>
+    <h1 class="hero-title">How climate risk is calculated</h1>
+    <p class="hero-sub">Every score is built from the IPCC's internationally validated risk framework, operationalised using the INFORM Risk Index methodology from the EU Joint Research Centre. All design choices are documented, peer-reviewed, and fully reproducible.</p>
+    <div class="hero-formula">
+      <span class="formula-text">Final Risk Score = (Hazard + Exposure + Vulnerability) ÷ 3</span>
+      <span class="formula-cite">INFORM JRC 2017 · IPCC AR6 WG2 · Equal weights</span>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ── SCORING FRAMEWORK ── -->
+  <section class="section" id="scoring-framework">
+    <div class="section-eyebrow">Framework Overview</div>
+    <h2 class="section-title">The Scoring Framework</h2>
+    <p class="section-sub">This tool adopts the IPCC AR6 tripartite risk model. Risk arises at the intersection of three independent dimensions — what nature does, who is there, and how much it will hurt them.</p>
+
+    <div class="pillars">
+      <div class="pillar hazard">
+        <div class="pillar-icon">🌀</div>
+        <div class="pillar-name">Hazard</div>
+        <div class="pillar-weight">Weight: 1/3 of final score</div>
+        <div class="pillar-desc">Physical intensity of climate events — flood, heat, cyclone, drought, extreme rainfall, and groundwater stress. Built from 40+ years of observed and reanalysis data. Each of 6 hazard scores uses the IPCC 75/25 framework: 75% present-day intensity + 25% climate trend trajectory.</div>
+      </div>
+      <div class="pillar exposure">
+        <div class="pillar-icon">🏙️</div>
+        <div class="pillar-name">Exposure</div>
+        <div class="pillar-weight">Weight: 1/3 of final score</div>
+        <div class="pillar-desc">People and assets present in the hazard zone. Three indicators — population density (WorldPop), built-up surface (GHSL), and economic activity (VIIRS nighttime lights) — combined with equal weights per INFORM methodology.</div>
+      </div>
+      <div class="pillar vulnerability">
+        <div class="pillar-icon">🏥</div>
+        <div class="pillar-name">Vulnerability</div>
+        <div class="pillar-weight">Weight: 1/3 of final score</div>
+        <div class="pillar-desc">How badly will people be affected, and how fast will they recover? Four NFHS-5 indicators — child stunting, women's literacy, sanitation access, child marriage — combined with equal weights. District-level data, India's most recent national health survey.</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Why equal weights across pillars?</strong> "The assignment of weights to indicators without empirical derivation represents an unjustified value judgement and should be avoided. Equal weights represent the neutral prior and are the appropriate default." — Cardona et al. (2012), Nature Climate Change. Equal weights are also used in the INFORM Risk Index (Marin-Ferrer et al., JRC 2017) and the UNDP Human Development Index.
+    </div>
+
+    <h3 style="font-family:'EB Garamond',serif;font-size:1.2rem;color:var(--navy);margin-bottom:1rem;">Within hazard: the IPCC 75/25 architecture</h3>
+    <p style="font-size:0.88rem;color:var(--text-2);line-height:1.7;max-width:780px;margin-bottom:1.25rem;">IPCC AR6 Chapter 11 (Seneviratne et al., 2021) establishes that a complete characterisation of any physical hazard requires two temporally distinct components. Present-day hazard magnitude explains approximately three-quarters of climate loss variance; trend-driven change explains the remaining quarter. This 75/25 ratio is implemented consistently across all six hazard scores.</p>
+    <div class="weight-bars">
+      <div class="weight-row">
+        <div class="weight-label">Present-day hazard (5 indicators, equally weighted at 15% each)</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" style="width:75%;background:var(--risk-h);"></div></div>
+        <div class="weight-pct">75%</div>
+      </div>
+      <div class="weight-row">
+        <div class="weight-label">Hazard trajectory / climate trend (1 indicator)</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" style="width:25%;background:#6330b8;"></div></div>
+        <div class="weight-pct">25%</div>
+      </div>
+    </div>
+
+    <div class="vintage-row">
+      <div class="vintage-item"><div class="vintage-label">Pincodes Covered</div><div class="vintage-val">19,591</div></div>
+      <div class="vintage-item"><div class="vintage-label">States & UTs</div><div class="vintage-val">36</div></div>
+      <div class="vintage-item"><div class="vintage-label">Hazard data period</div><div class="vintage-val">1979 – 2024</div></div>
+      <div class="vintage-item"><div class="vintage-label">Exposure vintage</div><div class="vintage-val">2020 – 2022</div></div>
+      <div class="vintage-item"><div class="vintage-label">Vulnerability vintage</div><div class="vintage-val">NFHS-5 · 2019–21</div></div>
+    </div>
+  </section>
+
+  <!-- ── HAZARD SCORES ── -->
+  <section class="section" id="hazard-scores">
+    <div class="section-eyebrow">Hazard Methodology</div>
+    <h2 class="section-title">Six Physical Hazard Scores</h2>
+    <p class="section-sub">Each hazard score is an independent composite index. Click any card to see the full methodology — sub-indicators, weights, data sources, and scientific rationale.</p>
+
+    <div class="hazard-grid">
+      <div class="hazard-card flood" onclick="toggleHazard('flood')">
+        <div class="hazard-icon">🌊</div>
+        <div class="hazard-name">Flood</div>
+        <div class="hazard-tagline">Riverine + coastal inundation from 6 indicators spanning GloFAS, JRC GSW, MERIT Hydro TWI, and IMD Rx5Day.</div>
+        <span class="expand-arrow">›</span>
+      </div>
+      <div class="hazard-card heat" onclick="toggleHazard('heat')">
+        <div class="hazard-icon">🌡️</div>
+        <div class="hazard-name">Heat</div>
+        <div class="hazard-tagline">Extreme heat exposure across 6 ERA5-Land indicators — hot days frequency, night heat, Wet Bulb Globe Temperature, heat waves, and trend.</div>
+        <span class="expand-arrow">›</span>
+      </div>
+      <div class="hazard-card cyclone" onclick="toggleHazard('cyclone')">
+        <div class="hazard-icon">🌀</div>
+        <div class="hazard-name">Cyclone</div>
+        <div class="hazard-tagline">Wind hazard from 45 years of IBTrACS North Indian Ocean track data. Six dimensions: frequency, peak intensity, proximity, RI, residence, and trend.</div>
+        <span class="expand-arrow">›</span>
+      </div>
+      <div class="hazard-card drought" onclick="toggleHazard('drought')">
+        <div class="hazard-icon">🏜️</div>
+        <div class="hazard-name">Drought</div>
+        <div class="hazard-tagline">Four IPCC-recognised drought types — meteorological, agricultural, hydrological, and trend — from CHIRPS 1981–2026 and ERA5-Land.</div>
+        <span class="expand-arrow">›</span>
+      </div>
+      <div class="hazard-card rainfall" onclick="toggleHazard('rainfall')">
+        <div class="hazard-icon">🌧️</div>
+        <div class="hazard-name">Extreme Rainfall</div>
+        <div class="hazard-tagline">Six ETCCDI standard indices — Rx1Day, Rx5Day, SDII, R95p, CWD, and trend — from 45 years of IMD gridded daily rainfall data.</div>
+        <span class="expand-arrow">›</span>
+      </div>
+      <div class="hazard-card gsi" onclick="toggleHazard('gsi')">
+        <div class="hazard-icon">💧</div>
+        <div class="hazard-name">Groundwater Stress</div>
+        <div class="hazard-tagline">Aquifer depletion risk from CGWB seasonal monitoring data — depth, fluctuation, extraction ratio, and depletion trend. Unique non-surface layer.</div>
+        <span class="expand-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- FLOOD DETAIL -->
+    <div class="hazard-detail" id="detail-flood">
+      <div class="detail-header">
+        <div class="detail-icon">🌊</div>
+        <div class="detail-title-block">
+          <div class="detail-title">Flood Hazard Score</div>
+          <div class="detail-version">V5 · IPCC AR6 + INFORM Aligned · Coastal Surge Corrected · 19,591 pincodes</div>
+        </div>
+      </div>
+      <div class="formula-box">
+        Score = (0.15 × GloFAS) + (0.15 × Historical_Occurrence) + (0.15 × TWI) + (0.15 × Water_Proximity) + (0.15 × Rx5Day) + (0.25 × JRC_Trend)<br>
+        + Coastal_Surge_Correction (NDMA-designated coastal districts)
+      </div>
+      <div class="table-scroll"><table class="indicators-table">
+        <thead><tr><th>Indicator</th><th>Weight</th><th>Data Source</th><th>What it measures</th></tr></thead>
+        <tbody>
+          <tr><td>GloFAS Flood Hazard Area</td><td><span class="weight-chip">15%</span></td><td>EU JRC · ECMWF</td><td>% of pincode in 100-year flood zone — modelled primary exposure</td></tr>
+          <tr><td>Historical Flood Occurrence</td><td><span class="weight-chip">15%</span></td><td>JRC Global Surface Water 1984–2021</td><td>38-year satellite-observed flood frequency — empirical ground truth</td></tr>
+          <tr><td>Terrain Wetness Index (TWI)</td><td><span class="weight-chip">15%</span></td><td>MERIT Hydro DEM</td><td>Hydrological drainage capacity — controls water accumulation speed</td></tr>
+          <tr><td>Water Proximity (&lt;2km)</td><td><span class="weight-chip">15%</span></td><td>JRC GSW Seasonality</td><td>% area within 2km of perennial water body — proximity to flood source</td></tr>
+          <tr><td>Extreme Rainfall (Rx5Day)</td><td><span class="weight-chip">15%</span></td><td>IMD Gridded Rainfall</td><td>Max 5-day accumulated rainfall — atmospheric flood trigger</td></tr>
+          <tr><td>JRC Surface Water Trend</td><td><span class="weight-chip trend">25%</span></td><td>JRC Global Surface Water change_abs</td><td>Change in permanent water extent 1984–2021 — forward trajectory</td></tr>
+        </tbody>
+      </table></div>
+      <div class="detail-rationale">The 75/25 split between current exposure (GloFAS + GSW + TWI + proximity + Rx5Day) and trajectory (JRC trend) directly operationalises IPCC AR6 Chapter 11 (Seneviratne et al., 2021), which establishes that present-day hazard explains ~75% of flood loss variance. V5 is statistically nearly identical to its predecessor V3 (max score difference 0.005 across all pincodes), but adds NDMA coastal surge correction and formalises dual IPCC + INFORM justification.</div>
+      <div class="sources-row">
+        <span class="source-chip">GloFAS (JRC · ECMWF)</span><span class="source-chip">JRC Global Surface Water</span><span class="source-chip">MERIT Hydro TWI</span><span class="source-chip">IMD Gridded Rainfall</span><span class="source-chip">NDMA Coastal Districts</span>
+      </div>
+    </div>
+
+    <!-- HEAT DETAIL -->
+    <div class="hazard-detail" id="detail-heat">
+      <div class="detail-header">
+        <div class="detail-icon">🌡️</div>
+        <div class="detail-title-block">
+          <div class="detail-title">Heat Hazard Score</div>
+          <div class="detail-version">Scheme A · IPCC 75/25 Weighted · ERA5-Land 1990–2024 · 19,591 pincodes</div>
+        </div>
+      </div>
+      <div class="formula-box">
+        Score = (0.15 × Hot_Days) + (0.15 × Tropical_Nights) + (0.15 × WBGT_Threshold_Days) + (0.15 × Heatwave_Duration) + (0.15 × Extreme_Heat_Index) + (0.25 × Warming_Trend)
+      </div>
+      <div class="table-scroll"><table class="indicators-table">
+        <thead><tr><th>Indicator</th><th>Weight</th><th>Metric</th><th>Physical dimension</th></tr></thead>
+        <tbody>
+          <tr><td>Hot Days Frequency (Tmax &gt; 35°C)</td><td><span class="weight-chip">15%</span></td><td>Days/year average</td><td>Threshold exceedance — direct heat stress exposure</td></tr>
+          <tr><td>Tropical Nights (Tmin &gt; 25°C)</td><td><span class="weight-chip">15%</span></td><td>Nights/year average</td><td>Nocturnal heat — prevents physiological recovery</td></tr>
+          <tr><td>WBGT Threshold Days</td><td><span class="weight-chip">15%</span></td><td>Days WBGT &gt; 32°C/year</td><td>Wet Bulb Globe Temperature — occupational &amp; health risk threshold</td></tr>
+          <tr><td>Heatwave Duration Index</td><td><span class="weight-chip">15%</span></td><td>Days in heatwave events</td><td>Sustained extreme heat — mortality and crop loss driver</td></tr>
+          <tr><td>Extreme Heat Index Days</td><td><span class="weight-chip">15%</span></td><td>Days Feels Like &gt; 40°C</td><td>Apparent temperature — combined T + humidity risk</td></tr>
+          <tr><td>Warming Trend (1990–2024)</td><td><span class="weight-chip trend">25%</span></td><td>°C/decade Mann-Kendall</td><td>Rate of temperature increase — forward trajectory signal</td></tr>
+        </tbody>
+      </table></div>
+      <div class="detail-rationale">Scheme A and Scheme B achieve Pearson r = 0.9674 and 99.9% within-1-band agreement (19,576/19,591 pincodes), confirming the 75/25 equal-weight structure is structurally robust. All indicators are derived from ERA5-Land reanalysis at ~9km resolution with full-coverage cell-averaging (eliminating the single-point centroid bias affecting 66% of pincodes in earlier versions).</div>
+      <div class="sources-row">
+        <span class="source-chip">ERA5-Land (ECMWF)</span><span class="source-chip">Copernicus CDS</span><span class="source-chip">2m Temperature (t2m)</span><span class="source-chip">2m Dewpoint (d2m)</span>
+      </div>
+    </div>
+
+    <!-- CYCLONE DETAIL -->
+    <div class="hazard-detail" id="detail-cyclone">
+      <div class="detail-header">
+        <div class="detail-icon">🌀</div>
+        <div class="detail-title-block">
+          <div class="detail-title">Cyclone Hazard Score</div>
+          <div class="detail-version">Version A · Trend-Anchored · IBTrACS 1980–2024 · North Indian Ocean · 19,591 pincodes</div>
+        </div>
+      </div>
+      <div class="formula-box">
+        Score = (0.15 × Track_Density) + (0.15 × Max_Wind_Exposure) + (0.15 × Proximity_Intensity) + (0.15 × Rapid_Intensification) + (0.15 × Storm_Residence_Time) + (0.25 × Trend_Factor)
+      </div>
+      <div class="table-scroll"><table class="indicators-table">
+        <thead><tr><th>Indicator</th><th>Weight</th><th>Search radius</th><th>Physical dimension</th></tr></thead>
+        <tbody>
+          <tr><td>Track Density (TD)</td><td><span class="weight-chip">15%</span></td><td>300 km</td><td>Annualised storm frequency — foundational frequency exposure metric used in all major cat models (RMS, AIR)</td></tr>
+          <tr><td>Max Wind Exposure (MW)</td><td><span class="weight-chip">15%</span></td><td>200 km</td><td>Peak wind speed × Saffir-Simpson multiplier — primary structural damage driver</td></tr>
+          <tr><td>Proximity Intensity (PI)</td><td><span class="weight-chip">15%</span></td><td>150 km</td><td>Wind decay with distance (Emanuel 2005 power function) — cumulative spatial exposure</td></tr>
+          <tr><td>Rapid Intensification (RI)</td><td><span class="weight-chip">15%</span></td><td>200 km</td><td>≥35 kt intensification in 24h — tail risk modifier, increasing in Indian Ocean</td></tr>
+          <tr><td>Storm Residence Time (RT)</td><td><span class="weight-chip">15%</span></td><td>100 km</td><td>Total hours within 100km — slow-moving storm damage amplifier</td></tr>
+          <tr><td>Trend Factor (TF)</td><td><span class="weight-chip trend">25%</span></td><td>500 km</td><td>Change in storm frequency + SST warming trend — forward climate signal</td></tr>
+        </tbody>
+      </table></div>
+      <div class="detail-rationale">Version A assigns the Trend Factor a fixed, privileged 25% position — the only forward-looking sub-indicator — while the five historical sub-indicators share the remaining 75% equally. Version A vs Version B achieves Spearman ρ = 0.978, confirming structural robustness. Version A is systematically slightly higher than Version B (mean +3.19 points) because the positive Indian Ocean SST warming trend elevates all coastal pincodes uniformly.</div>
+      <div class="sources-row">
+        <span class="source-chip">IBTrACS v04r01 (NOAA)</span><span class="source-chip">North Indian Ocean 1980–2024</span><span class="source-chip">458 storm tracks · 17,801 track points</span>
+      </div>
+    </div>
+
+    <!-- DROUGHT DETAIL -->
+    <div class="hazard-detail" id="detail-drought">
+      <div class="detail-header">
+        <div class="detail-icon">🏜️</div>
+        <div class="detail-title-block">
+          <div class="detail-title">Drought Hazard Score</div>
+          <div class="detail-version">Version A · IPCC 75/25 Framework · CHIRPS 1981–2026 + ERA5-Land · 19,591 pincodes</div>
+        </div>
+      </div>
+      <div class="formula-box">
+        Score = (0.15 × SPI_Deficit) + (0.15 × SPEI_Agricultural) + (0.15 × Consecutive_Dry_Days) + (0.15 × Aridity_Index) + (0.15 × Soil_Moisture_Stress) + (0.25 × Drought_Trend)
+      </div>
+      <div class="table-scroll"><table class="indicators-table">
+        <thead><tr><th>IPCC Drought Type</th><th>Weight</th><th>Indicator</th><th>Data Source</th></tr></thead>
+        <tbody>
+          <tr><td>Meteorological</td><td><span class="weight-chip">15%</span></td><td>Standardised Precipitation Index (SPI)</td><td>CHIRPS v2.0 1981–2026</td></tr>
+          <tr><td>Agricultural</td><td><span class="weight-chip">15%</span></td><td>SPEI — evapotranspiration corrected</td><td>CHIRPS + ERA5-Land</td></tr>
+          <tr><td>Meteorological</td><td><span class="weight-chip">15%</span></td><td>Consecutive Dry Days (CDD)</td><td>CHIRPS daily 1981–2026</td></tr>
+          <tr><td>Hydrological</td><td><span class="weight-chip">15%</span></td><td>FAO Aridity Index</td><td>ERA5-Land PET 1990–2024</td></tr>
+          <tr><td>Agricultural</td><td><span class="weight-chip">15%</span></td><td>Soil Moisture Stress Days</td><td>ERA5-Land Volumetric Soil Water</td></tr>
+          <tr><td>Trend (all types)</td><td><span class="weight-chip trend">25%</span></td><td>Mann-Kendall precipitation deficit trend</td><td>CHIRPS 1981–2026</td></tr>
+        </tbody>
+      </table></div>
+      <div class="detail-rationale">Version A and Version B achieve Pearson r = 0.972 and Spearman ρ = 0.967 — confirming structural robustness to weighting scheme choice. State rankings validated against 8 NDMA-classified drought-prone states with mean score separation of 18.4 points. Benchmarked against SPI, SPEI, CDI, and FAO Aridity Index in peer-reviewed literature.</div>
+      <div class="sources-row">
+        <span class="source-chip">CHIRPS v2.0 (1981–2026)</span><span class="source-chip">ERA5-Land (1990–2024)</span><span class="source-chip">NDMA Drought Classification</span>
+      </div>
+    </div>
+
+    <!-- RAINFALL DETAIL -->
+    <div class="hazard-detail" id="detail-rainfall">
+      <div class="detail-header">
+        <div class="detail-icon">🌧️</div>
+        <div class="detail-title-block">
+          <div class="detail-title">Extreme Rainfall Hazard Score</div>
+          <div class="detail-version">Version A · IPCC/INFORM Aligned · ETCCDI Standards · IMD 1979–2023 · 19,591 pincodes</div>
+        </div>
+      </div>
+      <div class="formula-box">
+        Score = (0.15 × Rx1Day) + (0.15 × Rx5Day) + (0.15 × SDII) + (0.15 × R95p) + (0.15 × CWD) + (0.25 × Trend)
+      </div>
+      <div class="table-scroll"><table class="indicators-table">
+        <thead><tr><th>ETCCDI Index</th><th>Weight</th><th>Definition</th><th>Physical dimension</th></tr></thead>
+        <tbody>
+          <tr><td>Rx1Day</td><td><span class="weight-chip">15%</span></td><td>Max 1-day precipitation</td><td>Peak instantaneous intensity — flash flood trigger</td></tr>
+          <tr><td>Rx5Day</td><td><span class="weight-chip">15%</span></td><td>Max 5-day accumulated rainfall</td><td>Basin-scale accumulation — riverine flood trigger</td></tr>
+          <tr><td>SDII</td><td><span class="weight-chip">15%</span></td><td>Simple Daily Intensity Index</td><td>Chronic intensity on wet days — infrastructure stress indicator</td></tr>
+          <tr><td>R95p</td><td><span class="weight-chip">15%</span></td><td>Annual total rainfall above 95th percentile</td><td>Very wet days frequency — tail risk of extreme events</td></tr>
+          <tr><td>CWD</td><td><span class="weight-chip">15%</span></td><td>Consecutive Wet Days</td><td>Sustained rainfall duration — waterlogging and runoff saturation</td></tr>
+          <tr><td>Trend (Mann-Kendall)</td><td><span class="weight-chip trend">25%</span></td><td>Change in extreme precipitation 1979–2023</td><td>Climate trajectory — increasing monsoon intensity signal</td></tr>
+        </tbody>
+      </table></div>
+      <div class="detail-rationale">All six indicators are drawn from the ETCCDI standard suite — the globally accepted framework for quantifying extreme precipitation endorsed by WMO, IPCC, and CCDI. Version A and Version B achieve Spearman ρ = 0.9919, the highest cross-version correlation of all six hazard scores, confirming that the 75/25 equal-weight structure is extremely robust for rainfall hazard assessment.</div>
+      <div class="sources-row">
+        <span class="source-chip">IMD 0.25° Gridded Daily Rainfall</span><span class="source-chip">1979–2023 · 45 years</span><span class="source-chip">ETCCDI Standard Suite</span>
+      </div>
+    </div>
+
+    <!-- GSI DETAIL -->
+    <div class="hazard-detail" id="detail-gsi">
+      <div class="detail-header">
+        <div class="detail-icon">💧</div>
+        <div class="detail-title-block">
+          <div class="detail-title">Groundwater Stress Index (GSI)</div>
+          <div class="detail-version">Scheme A · IPCC 75/25 · CGWB Seasonal Monitoring 2010–2023 · 19,591 pincodes</div>
+        </div>
+      </div>
+      <div class="formula-box">
+        Score = (0.25 × Avg_Jan_Depth_adj) + (0.25 × Seasonal_Fluctuation) + (0.25 × Extraction_Ratio) + (0.25 × Depletion_Trend)
+      </div>
+      <div class="table-scroll"><table class="indicators-table">
+        <thead><tr><th>Sub-Indicator</th><th>Weight</th><th>Data Source</th><th>Question answered</th></tr></thead>
+        <tbody>
+          <tr><td>Avg January Depth (aquifer-adjusted)</td><td><span class="weight-chip">25%</span></td><td>CGWB January PDF</td><td>How depleted is the aquifer right now?</td></tr>
+          <tr><td>Seasonal Fluctuation (m)</td><td><span class="weight-chip">25%</span></td><td>CGWB Jan − Post-monsoon</td><td>How fragile and sensitive is the aquifer? (Jan depth − post-monsoon depth)</td></tr>
+          <tr><td>Extraction Ratio (%)</td><td><span class="weight-chip">25%</span></td><td>CGWB Annual Report 2022</td><td>Is extraction exceeding recharge? Fixes the Punjab/Haryana collapse blind spot in fluctuation data</td></tr>
+          <tr><td>Depletion Trend</td><td><span class="weight-chip trend">25%</span></td><td>CGWB multi-year monitoring</td><td>Is the situation getting worse over time? Forward trajectory</td></tr>
+        </tbody>
+      </table></div>
+      <div class="detail-rationale">The GSI captures a risk dimension invisible to all other hazard layers — underground aquifer depletion driven by extraction vs recharge imbalance. Punjab extracts 165.99% of annual recharge (CGWB 2022) yet has a low drought score (adequate monsoon rainfall) and moderate flood score. Only the GSI captures this crisis. The Extraction Ratio was added as the 4th sub-indicator specifically to fix the systematic underscoring of Punjab, Haryana, and Rajasthan — where the water table has dropped below the monsoon recharge threshold, causing seasonal fluctuation to falsely collapse to near zero (documented by Rodell et al., 2009, Nature).</div>
+      <div class="sources-row">
+        <span class="source-chip">CGWB Seasonal Monitoring 2010–2023</span><span class="source-chip">CGWB Annual Report 2022</span><span class="source-chip">Ministry of Jal Shakti</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── EXPOSURE ── -->
+  <section class="section" id="exposure">
+    <div class="section-eyebrow">Exposure Methodology</div>
+    <h2 class="section-title">Exposure Score</h2>
+    <p class="section-sub">Who and what is in the hazard zone? Exposure is computed from three independently sourced geospatial indicators at the pincode level, combined with equal weights per the INFORM methodology.</p>
+
+    <div style="background:var(--navy);color:var(--amber-lt);font-family:'JetBrains Mono',monospace;font-size:0.9rem;padding:0.85rem 1.25rem;border-radius:4px;margin-bottom:1.5rem;">
+      Exposure Score = (1/3 × Population_Density) + (1/3 × Built_up_Surface_Ratio) + (1/3 × Nighttime_Light_Radiance)
+    </div>
+
+    <div class="exp-grid">
+      <div class="exp-card">
+        <div class="exp-card-icon">👥</div>
+        <div class="exp-card-name">Population Density</div>
+        <div class="exp-card-source">WorldPop 2022 · 100m resolution</div>
+        <div class="exp-card-body">Constrained top-down population grid from the University of Southampton. Validated against Census 2011 (Stevens et al., 2015, PLOS ONE). Captures human presence — the primary exposure dimension.</div>
+      </div>
+      <div class="exp-card">
+        <div class="exp-card-icon">🏗️</div>
+        <div class="exp-card-name">Built-up Surface</div>
+        <div class="exp-card-source">GHSL GHS-BUILT-S R2023A · 90m resolution</div>
+        <div class="exp-card-body">Global Human Settlement Layer from EU Joint Research Centre. Cited in IPCC AR6 WG2 Chapter 8. Captures infrastructure and physical asset exposure — essential because dense slums and dense CBDs have similar population density but vastly different asset values.</div>
+      </div>
+      <div class="exp-card">
+        <div class="exp-card-icon">🌃</div>
+        <div class="exp-card-name">Nighttime Lights</div>
+        <div class="exp-card-source">NASA/NOAA VIIRS VNL v2.2 · 2022</div>
+        <div class="exp-card-body">Nighttime light radiance as a proxy for economic activity and asset value. Provides orthogonal information to population density — captures economic exposure, critical for financial risk applications. VIIRS provides calibrated, annually composited data at 500m resolution.</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Why three indicators?</strong> Comprehensiveness (single indicator cannot capture full dimensionality), independence (three distinct dimensions — human presence, physical infrastructure, economic activity), parsimony (adding more risks double-counting), and data quality (all three are globally validated, peer-reviewed, freely available). INFORM Global Index uses a similar 3–5 indicator approach per sub-component.
+    </div>
+  </section>
+
+  <!-- ── VULNERABILITY ── -->
+  <section class="section" id="vulnerability">
+    <div class="section-eyebrow">Vulnerability Methodology</div>
+    <h2 class="section-title">Vulnerability Score</h2>
+    <p class="section-sub">How badly will people be affected, and how fast will they recover? Vulnerability is measured using four sub-indicators from NFHS-5 (2019–21), India's most recent nationally representative household survey covering 638 districts.</p>
+
+    <div style="background:var(--navy);color:var(--amber-lt);font-family:'JetBrains Mono',monospace;font-size:0.9rem;padding:0.85rem 1.25rem;border-radius:4px;margin-bottom:1.5rem;">
+      Vulnerability Score = (1/4 × Stunting_rate) + (1/4 × (100 − Literacy_rate)) + (1/4 × (100 − Sanitation_access)) + (1/4 × Child_marriage_rate)
+    </div>
+
+    <div class="vuln-grid">
+      <div class="vuln-card">
+        <div class="vuln-card-header">
+          <div class="vuln-icon stunt">🧒</div>
+          <div>
+            <div class="vuln-title">Child Stunting Rate</div>
+            <div class="vuln-source">NFHS-5 · Children under 5 stunted (%)</div>
+          </div>
+        </div>
+        <div class="vuln-body">Stunting is the most direct measure of chronic nutritional deprivation. Communities with high stunting rates are more fragile to climate shocks — food insecurity from drought or flood pushes already-malnourished children into acute crisis. Used by WHO, UNICEF, and World Bank as a primary climate vulnerability indicator for South Asia. Stunted children have compromised immune function, making them severely more susceptible to the disease outbreaks that follow climate events.</div>
+        <span class="dir-badge dir-high">↑ higher = more vulnerable</span>
+      </div>
+      <div class="vuln-card">
+        <div class="vuln-card-header">
+          <div class="vuln-icon lit">📖</div>
+          <div>
+            <div class="vuln-title">Women's Literacy Rate</div>
+            <div class="vuln-source">NFHS-5 · Women who are literate (%)</div>
+          </div>
+        </div>
+        <div class="vuln-body">Literacy is the foundational measure of adaptive capacity — literate communities access early warning systems faster, navigate government relief better, and recover more quickly. NFHS-5 uses women age 6+ as denominator, fixing the Census 2011 denominator error. IPCC AR6 WG2 Chapter 8 identifies women's literacy as a primary vulnerability indicator for South Asia. Higher literacy means faster disaster response, better information access, and stronger institutional engagement.</div>
+        <span class="dir-badge dir-low">↓ higher = less vulnerable</span>
+      </div>
+      <div class="vuln-card">
+        <div class="vuln-card-header">
+          <div class="vuln-icon san">🚿</div>
+          <div>
+            <div class="vuln-title">Sanitation Access</div>
+            <div class="vuln-source">NFHS-5 · Improved sanitation facility (%)</div>
+          </div>
+        </div>
+        <div class="vuln-body">Sanitation directly amplifies flood and cyclone damage through waterborne disease outbreaks. Areas without improved sanitation suffer post-flood cholera, typhoid, and diarrhoea epidemics that multiply casualty counts and extend recovery timelines by weeks. Poor sanitation is a direct infrastructure vulnerability used by INFORM, NDMA, and WHO climate risk assessments. It is an independently measurable, post-disaster amplifier of harm — not a proxy for general poverty.</div>
+        <span class="dir-badge dir-low">↓ higher = less vulnerable</span>
+      </div>
+      <div class="vuln-card">
+        <div class="vuln-card-header">
+          <div class="vuln-icon mar">💍</div>
+          <div>
+            <div class="vuln-title">Child Marriage Rate</div>
+            <div class="vuln-source">NFHS-5 · Women married before 18 (%)</div>
+          </div>
+        </div>
+        <div class="vuln-body">Child marriage is a composite social development indicator — districts with high child marriage have lower girls' education, higher maternal mortality, and weaker community institutions. These are precisely the factors that determine how quickly a community rebounds from a climate event. IPCC AR6 WG2 Chapter 8 explicitly cites early marriage as a vulnerability amplifier in South Asia. It serves as a robust, independently validated signal of structural social fragility, not simply as a gender equity metric.</div>
+        <span class="dir-badge dir-high">↑ higher = more vulnerable</span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Why equal weights within vulnerability?</strong> All four indicators have equal conceptual standing as vulnerability dimensions — nutritional fragility, adaptive capacity, infrastructure deficit, and social fragility. There is no empirical basis to prefer one over another at national scale. Cardona et al. (2012, Nature Climate Change) and INFORM GRI (JRC 2017) both explicitly establish equal weighting as the correct default in this situation. The four indicators are drawn from the same data source (NFHS-5) and measured at the same spatial scale (district), making equal weights further defensible.
+    </div>
+  </section>
+
+  <!-- ── DATA SOURCES ── -->
+  <section class="section" id="data-sources">
+    <div class="section-eyebrow">Data Sources</div>
+    <h2 class="section-title">All Data Sources</h2>
+    <p class="section-sub">No proprietary or non-reproducible data is used. Every source is freely available, internationally standardised, and validated in the peer-reviewed literature.</p>
+
+    <div class="sources-grid">
+      <a class="src-card" href="https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:var(--risk-h);"></div>
+        <div><div class="src-name">ERA5-Land Reanalysis — ECMWF ↗</div><div class="src-desc">Heat, drought, and rainfall sub-indicators. 1990–2024. Copernicus Climate Data Store. ~9km resolution.</div></div>
+      </a>
+      <a class="src-card" href="https://global-flood-map.jrc.ec.europa.eu/" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:var(--flood);"></div>
+        <div><div class="src-name">GloFAS Flood Hazard Map — JRC · ECMWF ↗</div><div class="src-desc">Modelled 100-year flood zone area per pincode. Global river routing model. Ward et al. (2013), GRL.</div></div>
+      </a>
+      <a class="src-card" href="https://global-surface-water.appspot.com/" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:var(--rainfall);"></div>
+        <div><div class="src-name">JRC Global Surface Water ↗</div><div class="src-desc">38-year Landsat satellite record (1984–2021). 30m resolution. Pekel et al. (2016), Nature.</div></div>
+      </a>
+      <a class="src-card" href="https://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_Hydro/" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:#5a6e80;"></div>
+        <div><div class="src-name">MERIT Hydro DEM ↗</div><div class="src-desc">Hydrologically conditioned DEM for TWI computation. Yamazaki et al. (2019), Water Resources Research.</div></div>
+      </a>
+      <a class="src-card" href="https://www.ncei.noaa.gov/products/international-best-track-archive" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:var(--cyclone);"></div>
+        <div><div class="src-name">IBTrACS v04r01 — NOAA NCEI ↗</div><div class="src-desc">Global tropical cyclone best-track archive. North Indian Ocean, 1980–2024. 458 storms, 17,801 track points.</div></div>
+      </a>
+      <a class="src-card" href="https://psl.noaa.gov/data/gridded/data.noaa.ersst.v5.html" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:#0d47a1;"></div>
+        <div><div class="src-name">NOAA ERSSTv5 — Sea Surface Temperature ↗</div><div class="src-desc">Extended Reconstructed SST. Global monthly, 1854–2026. 2°×2° grid. Cyclone SST trend factor.</div></div>
+      </a>
+      <a class="src-card" href="https://www.chc.ucsb.edu/data/chirps" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:#d84315;"></div>
+        <div><div class="src-name">CHIRPS v2.0 — Climate Hazards Group ↗</div><div class="src-desc">Climate Hazards InfraRed Precipitation with Stations. 1981–2026. 0.05° resolution. Drought indicators.</div></div>
+      </a>
+      <a class="src-card" href="https://cgwb.gov.in/en/documents/data-maps" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:var(--gsi);"></div>
+        <div><div class="src-name">CGWB Groundwater Monitoring — Jal Shakti ↗</div><div class="src-desc">Central Ground Water Board seasonal well data. 2010–2023. Jan + post-monsoon levels + extraction ratios.</div></div>
+      </a>
+      <a class="src-card" href="https://rchiips.org/nfhs/nfhs5.shtml" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:#3b6d11;"></div>
+        <div><div class="src-name">NFHS-5 (2019–21) — MoHFW India ↗</div><div class="src-desc">National Family Health Survey. Ministry of Health & Family Welfare, Govt. of India. 638 districts.</div></div>
+      </a>
+      <a class="src-card" href="https://hub.worldpop.org/geodata/summary?id=49726" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:var(--risk-vl);"></div>
+        <div><div class="src-name">WorldPop 2022 — University of Southampton ↗</div><div class="src-desc">Constrained top-down population grid. 100m resolution. Exposure: population density indicator.</div></div>
+      </a>
+      <a class="src-card" href="https://sites.research.google/open-buildings/" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:#1976d2;"></div>
+        <div><div class="src-name">Google Open Buildings 2.5D — Google Research ↗</div><div class="src-desc">Building density via deep learning on Sentinel-2. 100m resolution. 1.8 billion detections across South Asia.</div></div>
+      </a>
+      <a class="src-card" href="https://eogdata.mines.edu/products/vnl/" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:#1a237e;"></div>
+        <div><div class="src-name">VIIRS VNL v2.2 (2022) — NASA / NOAA ↗</div><div class="src-desc">Nighttime light radiance. 500m resolution. Economic activity proxy. Exposure: asset value dimension.</div></div>
+      </a>
+      <a class="src-card" href="https://www.imdpune.gov.in/cmpg/Griddata/Rainfall_25_Bin.html" target="_blank" rel="noopener">
+        <div class="src-dot" style="background:#b8860b;"></div>
+        <div><div class="src-name">IMD 0.25° Gridded Rainfall ↗</div><div class="src-desc">India Meteorological Department daily gridded rainfall. 1979–2023. 45 years. ETCCDI rainfall hazard indices.</div></div>
+      </a>
+    </div>
+
+    <div class="callout">
+      <strong>Scientific framework references:</strong> IPCC AR6 WG1 Chapter 11 (Seneviratne et al., 2021) — hazard architecture and 75/25 framework. INFORM Risk Index (Marin-Ferrer et al., JRC 2017) — equal-weight methodology. OECD Handbook on Composite Indicators (2008) — equal weight justification. Cardona et al. (2012), Nature Climate Change — weight neutrality principle. IPCC AR6 WG2 Chapter 8 — South Asia vulnerability indicators.
+    </div>
+  </section>
+
+  <!-- ── RISK CLASSIFICATION ── -->
+  <section class="section" id="risk-classification">
+    <div class="section-eyebrow">Risk Classification</div>
+    <h2 class="section-title">Risk Bands &amp; Classification Scale</h2>
+    <p class="section-sub">All composite scores (hazard, exposure, vulnerability, and final risk) are expressed on a 0–100 scale and classified into five bands using equal-interval thresholds.</p>
+
+    <div class="risk-bands">
+      <div class="risk-band rb-vl"><div class="risk-band-label">Very Low</div><div class="risk-band-range">0 – 20</div></div>
+      <div class="risk-band rb-l"><div class="risk-band-label">Low</div><div class="risk-band-range">20 – 40</div></div>
+      <div class="risk-band rb-m"><div class="risk-band-label">Medium</div><div class="risk-band-range">40 – 60</div></div>
+      <div class="risk-band rb-h"><div class="risk-band-label">High</div><div class="risk-band-range">60 – 80</div></div>
+      <div class="risk-band rb-vh"><div class="risk-band-label">Very High</div><div class="risk-band-range">80 – 100</div></div>
+    </div>
+
+    <div class="table-scroll"><table class="fw-table">
+      <thead><tr><th>Score Type</th><th>Inputs</th><th>Normalisation</th><th>Aggregation</th></tr></thead>
+      <tbody>
+        <tr><td>Each Hazard Score (×6)</td><td>5 present-day indicators + 1 trend indicator</td><td>Min-max per indicator across all 19,591 pincodes</td><td>75/25 weighted sum (IPCC AR6)</td></tr>
+        <tr><td>Composite Hazard</td><td>6 hazard scores (flood, heat, cyclone, drought, rainfall, GSI)</td><td>Already 0–100</td><td>Equal-weight mean (1/6 each)</td></tr>
+        <tr><td>Exposure Score</td><td>Population density, built-up surface, nighttime lights</td><td>Min-max per indicator</td><td>Equal-weight mean (1/3 each)</td></tr>
+        <tr><td>Vulnerability Score</td><td>4 NFHS-5 district indicators</td><td>Min-max, direction-corrected</td><td>Equal-weight mean (1/4 each)</td></tr>
+        <tr><td><strong>Final Risk Score</strong></td><td>Composite Hazard + Exposure + Vulnerability</td><td>Already 0–100</td><td><strong>Equal-weight mean (1/3 each)</strong></td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="callout">
+      <strong>Important limitation:</strong> Scores represent relative physical exposure and structural risk propensity — the long-run probability of being affected. This tool measures structural physical climate risk, not real-time or short-term weather. It should not be used as the sole basis for financial, insurance, or engineering decisions. Weather data sourced from ERA5 reanalysis (ECMWF). Pincode boundary data from India Post / Survey of India 2022. This approach is identical to the methodology used by Munich Re NatCatSERVICE, Swiss Re sigma, and World Bank Country Climate Development Reports.
+    </div>
+  </section>
+
+
+  <!-- ── CTA BANNER ── -->
+  <div class="cta-banner">
+    <div class="cta-title">See how your location scores</div>
+    <p class="cta-sub">Every methodology described here is live — search any India pincode and see it applied in real time.</p>
+    <a href="index.html" class="cta-btn">← Open the Explorer</a>
+  </div>
+
+
+
+  <!-- ── ACKNOWLEDGEMENTS ── -->
+  <section class="section" id="acknowledgements">
+    <div class="section-eyebrow">Acknowledgements</div>
+    <h2 class="section-title">Data Acknowledgements</h2>
+    <p class="section-sub">This tool is built entirely on open, publicly funded datasets. Each data provider has specified how their data should be credited — those required citations are listed here in full.</p>
+
+    <div class="ack-list">
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:#b8500a;"></div><div class="ack-name">Copernicus Climate Change Service / ERA5-Land</div></div>
+        <div class="ack-body">Muñoz Sabater, J. (2019): ERA5-Land hourly data from 1950 to present. Copernicus Climate Change Service (C3S) Climate Data Store (CDS). DOI: <a href="https://doi.org/10.24381/cds.e2161bac" target="_blank" rel="noopener">10.24381/cds.e2161bac</a>. Accessed May 2026. Contains modified Copernicus Climate Change Service information [1990–2024]. Neither the European Commission nor ECMWF is responsible for any use that may be made of the Copernicus information or data it contains.</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:var(--flood);"></div><div class="ack-name">JRC Global Surface Water (Pekel et al.)</div></div>
+        <div class="ack-body">Pekel, J.-F., Cottam, A., Gorelick, N. &amp; Belward, A.S. (2016). High-resolution mapping of global surface water and its long-term changes. <em>Nature</em>, 540, 418–422. DOI: <a href="https://doi.org/10.1038/nature20584" target="_blank" rel="noopener">10.1038/nature20584</a>. Data provided by the European Commission Joint Research Centre (JRC) under the Copernicus Programme. Source: EC JRC / Google.</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:#1565c0;"></div><div class="ack-name">GloFAS — Global Flood Awareness System</div></div>
+        <div class="ack-body">Alfieri, L., Salamon, P., Bianchi, A., Neal, J., Bates, P. &amp; Feyen, L. (2014). Advances in pan-European flood hazard mapping. <em>Hydrological Processes</em>, 28(13), 4067–4077. GloFAS is a joint initiative of the European Commission and ECMWF. Data accessed via the Copernicus Emergency Management Service. © European Union, 2024.</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:#5a6e80;"></div><div class="ack-name">MERIT Hydro</div></div>
+        <div class="ack-body">Yamazaki, D., Ikeshima, D., Sosa, J., Bates, P.D., Allen, G.H. &amp; Pavelsky, T.M. (2019). MERIT Hydro: A high‐resolution global hydrography map based on latest topography dataset. <em>Water Resources Research</em>, 55(6), 5053–5073. DOI: <a href="https://doi.org/10.1029/2019WR024873" target="_blank" rel="noopener">10.1029/2019WR024873</a>.</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:var(--cyclone);"></div><div class="ack-name">IBTrACS — International Best Track Archive for Climate Stewardship</div></div>
+        <div class="ack-body">Knapp, K.R., Kruk, M.C., Levinson, D.H., Diamond, H.J. &amp; Neumann, C.J. (2010). The International Best Track Archive for Climate Stewardship (IBTrACS). <em>Bulletin of the American Meteorological Society</em>, 91(3), 363–376. DOI: <a href="https://doi.org/10.1175/2009BAMS2755.1" target="_blank" rel="noopener">10.1175/2009BAMS2755.1</a>. Knapp, K.R. et al. (2018): <em>Bulletin of the American Meteorological Society</em>, 99(9), 1899–1911. Data provided by NOAA National Centers for Environmental Information (NCEI).</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:#0d47a1;"></div><div class="ack-name">NOAA ERSSTv5 — Extended Reconstructed Sea Surface Temperature</div></div>
+        <div class="ack-body">Huang, B., Thorne, P.W., Banzon, V.F., Boyer, T., Chepurin, G., Lawrimore, J.H., Menne, M.J., Smith, T.M., Vose, R.S. &amp; Zhang, H.-M. (2017). NOAA Extended Reconstructed Sea Surface Temperature (ERSST), Version 5. <em>Journal of Climate</em>, 30(20), 8179–8205. DOI: <a href="https://doi.org/10.1175/JCLI-D-16-0836.1" target="_blank" rel="noopener">10.1175/JCLI-D-16-0836.1</a>. Data provided by NOAA Physical Sciences Laboratory (PSL), from <a href="https://psl.noaa.gov" target="_blank" rel="noopener">https://psl.noaa.gov</a>.</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:#d84315;"></div><div class="ack-name">CHIRPS — Climate Hazards Group InfraRed Precipitation with Stations</div></div>
+        <div class="ack-body">Funk, C., Peterson, P., Landsfeld, M., Pedreros, D., Verdin, J., Shukla, S., Husak, G., Rowland, J., Harrison, L., Hoell, A. &amp; Michaelsen, J. (2015). The climate hazards infrared precipitation with stations — a new environmental record for monitoring extremes. <em>Scientific Data</em>, 2, 150066. DOI: <a href="https://doi.org/10.1038/sdata.2015.66" target="_blank" rel="noopener">10.1038/sdata.2015.66</a>. Data provided by the Climate Hazards Center, UC Santa Barbara.</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:var(--gsi);"></div><div class="ack-name">CGWB — Central Ground Water Board, India</div></div>
+        <div class="ack-body">Central Ground Water Board (CGWB), Ministry of Jal Shakti, Government of India. <em>Dynamic Ground Water Resources of India</em> (2022). Seasonal groundwater level monitoring data, 2010–2023. © Ministry of Jal Shakti, Government of India. Use subject to the National Data Sharing and Accessibility Policy (NDSAP).</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:#3b6d11;"></div><div class="ack-name">NFHS-5 — National Family Health Survey</div></div>
+        <div class="ack-body">International Institute for Population Sciences (IIPS) and ICF (2021). <em>National Family Health Survey (NFHS-5), India, 2019–21: India Report</em>. Mumbai: IIPS. Data provided by the Ministry of Health &amp; Family Welfare, Government of India. Users are requested to acknowledge the survey, the Ministry of Health &amp; Family Welfare, and ICF when publishing any analysis using NFHS-5 data.</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:var(--risk-vl);"></div><div class="ack-name">WorldPop — University of Southampton</div></div>
+        <div class="ack-body">WorldPop (www.worldpop.org — School of Geography and Environmental Science, University of Southampton; Department of Geography and Geosciences, University of Louisville; Departement de Geographie, Universite de Namur) and Center for International Earth Science Information Network (CIESIN), Columbia University (2018). Global High Resolution Population Denominators Project — Funded by The Bill and Melinda Gates Foundation (OPP1134076). DOI: <a href="https://doi.org/10.5258/SOTON/WP00674" target="_blank" rel="noopener">10.5258/SOTON/WP00674</a>.</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:#1976d2;"></div><div class="ack-name">Google Open Buildings 2.5D — Google Research</div></div>
+        <div class="ack-body">Sirko, W. et al. (2021). Continental-Scale Building Detection from High Resolution Satellite Imagery. <em>arXiv:2107.12283</em>. Dataset: Google Research Open Buildings 2.5D Temporal v1, GEE Asset <code style="font-size:0.8rem;background:#f0f0f0;padding:1px 4px;border-radius:3px;">GOOGLE/Research/open-buildings-temporal/v1</code>, 2022 annual composite. Available under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:#1a237e;"></div><div class="ack-name">VIIRS Nighttime Lights — NASA / NOAA</div></div>
+        <div class="ack-body">Elvidge, C.D., Zhizhin, M., Ghosh, T., Hsu, F.-C. &amp; Taneja, J. (2021). Annual Time Series of Global VIIRS Nighttime Lights Derived from Monthly Averages: 2012 to 2019. <em>Remote Sensing</em>, 13(5), 922. DOI: <a href="https://doi.org/10.3390/rs13050922" target="_blank" rel="noopener">10.3390/rs13050922</a>. Data provided by the Earth Observation Group, Payne Institute for Public Policy, Colorado School of Mines.</div>
+      </div>
+
+      <div class="ack-card">
+        <div class="ack-header"><div class="ack-dot" style="background:#b8860b;"></div><div class="ack-name">IMD Gridded Rainfall — India Meteorological Department</div></div>
+        <div class="ack-body">Pai, D.S., Sridhar, L., Rajeevan, M., Sreejith, O.P., Satbut, N.S. &amp; Mukhopadhyay, B. (2014). Development of a new high spatial resolution (0.25° × 0.25°) long period (1901–2010) daily gridded rainfall data set over India. <em>Mausam</em>, 65(1), 1–18. Data provided by the India Meteorological Department, Ministry of Earth Sciences, Government of India.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── DISCLAIMER ── -->
+  <section class="section" id="disclaimer">
+    <div class="section-eyebrow">Important Notice</div>
+    <h2 class="section-title">Disclaimer</h2>
+    <p class="section-sub">Please read before using or citing scores from this tool.</p>
+
+    <div class="disclaimer-box">
+      <h3>⚠ Terms of Use &amp; Limitations of Liability</h3>
+
+      <div class="disclaimer-item">
+        <div class="disclaimer-number">01</div>
+        <div class="disclaimer-text"><strong>For informational and research purposes only.</strong> Scores produced by this tool are intended for portfolio screening, academic research, policy analysis, and general awareness. They are not intended to serve as the sole basis for financial decisions, insurance underwriting, engineering design, legal determinations, or any life-safety application.</div>
+      </div>
+
+      <div class="disclaimer-item">
+        <div class="disclaimer-number">02</div>
+        <div class="disclaimer-text"><strong>Structural risk, not real-time forecasting.</strong> This tool measures long-run structural physical climate risk — the historical and climatological propensity of a location to experience climate hazards over a multi-decade horizon. It is not a weather forecast, a seasonal outlook, or a real-time hazard warning system. A pincode scoring Very High on any hazard may not experience an event this year; a Low-scoring pincode is not immune.</div>
+      </div>
+
+      <div class="disclaimer-item">
+        <div class="disclaimer-number">03</div>
+        <div class="disclaimer-text"><strong>Scores are relative, not absolute.</strong> All scores are normalised on a 0–100 scale relative to the national distribution of Indian pincodes. A score of 75 means higher exposure than approximately 75% of Indian pincodes — it does not represent a 75% probability of any event occurring. Scores are not directly comparable with indices from other countries or platforms.</div>
+      </div>
+
+      <div class="disclaimer-item">
+        <div class="disclaimer-number">04</div>
+        <div class="disclaimer-text"><strong>Data vintage and coverage limitations apply.</strong> Hazard scores are derived from historical reanalysis and observational datasets (1979–2024). Vulnerability scores are from NFHS-5 (2019–21) and are assigned at district level — all pincodes within a district share the same vulnerability score.</div>
+      </div>
+
+      <div class="disclaimer-item">
+        <div class="disclaimer-number">05</div>
+        <div class="disclaimer-text"><strong>Six hazards only — not exhaustive.</strong> The composite hazard score covers flood, heat, cyclone, drought, extreme rainfall, and groundwater stress. It does not include landslide, lightning, urban heat island amplification, coastal erosion, air quality, or seismic risk. The absence of a hazard from this tool does not imply its absence from a location.</div>
+      </div>
+
+      <div class="disclaimer-item">
+        <div class="disclaimer-number">06</div>
+        <div class="disclaimer-text"><strong>Not a substitute for professional assessment.</strong> For high-stakes applications — including but not limited to infrastructure siting, insurance product design, credit risk modelling, or government planning — these scores should be treated as a first-screen input only, supplemented by site-specific surveys, local authority datasets, domain expert review, and actuarial analysis.</div>
+      </div>
+
+      <div class="disclaimer-item">
+        <div class="disclaimer-number">07</div>
+        <div class="disclaimer-text"><strong>Weather data source.</strong> Atmospheric hazard data is sourced from the ERA5-Land reanalysis (ECMWF / Copernicus). Neither the European Commission nor ECMWF is responsible for any use that may be made of the Copernicus information or data it contains. Pincode boundary data is sourced from India Post / Survey of India 2022.</div>
+      </div>
+
+      <div class="disclaimer-item">
+        <div class="disclaimer-number">08</div>
+        <div class="disclaimer-text"><strong>No warranty.</strong> Scores are provided as-is, without warranty of any kind, express or implied. The creators of this tool make no representations about the accuracy, completeness, or fitness for any particular purpose of the scores. All methodology is published openly so that users can make their own informed assessment of appropriate use.</div>
+      </div>
+
+      <div class="disclaimer-legal">
+        This tool is an independent research project. It is not affiliated with, endorsed by, or produced in association with any government agency, regulatory body, insurance regulator, or financial authority. The use of open datasets from ECMWF, NOAA, EU JRC, IMD, CGWB, and other providers does not imply endorsement of this tool by those organisations. © 2025 India Physical Climate Risk Explorer. All methodology documentation is published under open access terms for academic and non-commercial use.
+      </div>
+    </div>
+  </section>
+
+
+</div>
+
+<footer>
+  <div class="footer-note">
+    India Physical Climate Risk Explorer · Methodology v5 · IPCC AR6 + INFORM Aligned<br>
+    © 2025 India Physical Climate Risk Explorer · Built on open data · All sources peer-reviewed and publicly available<br>
+    <a href="index.html" style="color:rgba(245,166,35,0.6);text-decoration:none;">← Back to Explorer</a>
+  </div>
+</footer>
+
+<script>
+// Accordion toggle
+function toggleHazard(id) {
+  const card = document.querySelector(`.hazard-card.${id}`);
+  const detail = document.getElementById(`detail-${id}`);
+  const allCards = document.querySelectorAll('.hazard-card');
+  const allDetails = document.querySelectorAll('.hazard-detail');
+
+  const isOpen = detail.classList.contains('visible');
+
+  // Close all
+  allCards.forEach(c => c.classList.remove('active'));
+  allDetails.forEach(d => d.classList.remove('visible'));
+
+  // Open if was closed
+  if (!isOpen) {
+    card.classList.add('active');
+    detail.classList.add('visible');
+    // Scroll detail into view
+    setTimeout(() => detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  }
+}
+
+// Active nav link on scroll
+const sections = document.querySelectorAll('.section[id]');
+const navLinks = document.querySelectorAll('.toc-link');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const link = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+
+// Animate weight bars on load
+document.querySelectorAll('.weight-bar-fill').forEach(bar => {
+  const target = bar.style.width;
+  bar.style.width = '0';
+  setTimeout(() => { bar.style.width = target; }, 400);
+});
+
+// FAQ toggle
+function toggleFaq(el) {
+  const item = el.closest('
+
+// Open to section if hash present
+if (window.location.hash) {
+  const target = document.querySelector(window.location.hash);
+  if (target) setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+}
+</script>
+</body>
+</html>

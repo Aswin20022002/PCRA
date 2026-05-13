@@ -824,9 +824,19 @@ footer {
           </div>
         </div>
         <div class="panel" id="scores-panel" style="display:flex;flex-direction:column;">
-          <div class="panel-hd">
-            <span class="panel-title">Climate Hazard Scores</span>
-            <span style="font-size:0.72rem;color:var(--navy);font-weight:600;letter-spacing:0.02em;opacity:0.7;">↓ Click any row for details</span>
+          <div class="panel-hd" style="flex-direction:column;gap:0.5rem;padding-bottom:0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+              <span class="panel-title">Climate Risk Scores</span>
+              <span id="click-row-hint" style="font-size:0.72rem;color:var(--navy);font-weight:600;letter-spacing:0.02em;opacity:0.7;">↓ Click any row for details</span>
+            </div>
+            <div id="pillar-tabs" style="display:flex;margin:0 -1.2rem;border-bottom:1px solid var(--rule-light);">
+              <button id="pillar-tab-hazard" onclick="switchPillarTab('hazard')"
+                style="flex:1;padding:0.55rem 0.5rem;font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;border:none;border-bottom:2px solid var(--amber);background:transparent;color:var(--navy);cursor:pointer;white-space:nowrap;">⚡ Hazard</button>
+              <button id="pillar-tab-exposure" onclick="switchPillarTab('exposure')"
+                style="flex:1;padding:0.55rem 0.5rem;font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text-3);cursor:pointer;white-space:nowrap;">🏘 Exposure</button>
+              <button id="pillar-tab-vulnerability" onclick="switchPillarTab('vulnerability')"
+                style="flex:1;padding:0.55rem 0.5rem;font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text-3);cursor:pointer;white-space:nowrap;">👥 Vuln.</button>
+            </div>
           </div>
           <div class="scores-body" id="scores-body"></div>
         </div>
@@ -834,7 +844,7 @@ footer {
 
       <!-- Temperature + Precipitation trends -->
       <div class="trends-section">
-        <div id="trends-pin-tabs" style="display:none;margin-bottom:1rem;display:flex;gap:0.4rem;flex-wrap:wrap;"></div>
+        <div id="trends-pin-tabs" style="display:none;margin-bottom:1rem;gap:0.4rem;flex-wrap:wrap;"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" id="trends-grid">
           <div class="trend-module" id="temp-module">
             <div class="trend-module-hd">
@@ -921,10 +931,14 @@ footer {
         <div>
           <div class="footer-col-title">Methodology</div>
           <ul class="footer-links">
-            <li><a href="#" onclick="alert('Methodology document coming soon.')">Scoring Framework</a></li>
-            <li><a href="#" onclick="alert('Data sources document coming soon.')">Data Sources</a></li>
-            <li><a href="#" onclick="alert('Risk classification document coming soon.')">Risk Classification</a></li>
-            <li><a href="#" onclick="alert('Changelog coming soon.')">Changelog &amp; Versions</a></li>
+            <li><a href="methodology.html#scoring-framework" target="_blank">Scoring Framework</a></li>
+            <li><a href="methodology.html#hazard-scores" target="_blank">Hazard Scores</a></li>
+            <li><a href="methodology.html#exposure" target="_blank">Exposure</a></li>
+            <li><a href="methodology.html#vulnerability" target="_blank">Vulnerability</a></li>
+            <li><a href="methodology.html#risk-classification" target="_blank">Risk Classification</a></li>
+            <li><a href="methodology.html#data-sources" target="_blank">Data Sources</a></li>
+            <li><a href="methodology.html#acknowledgements" target="_blank">Acknowledgements</a></li>
+            <li><a href="methodology.html#disclaimer" target="_blank">Disclaimer</a></li>
           </ul>
         </div>
         <div>
@@ -956,7 +970,7 @@ footer {
 const SCORE_FILES = [
   {key:"cyclone",  file:"precomputed_cyclone_scores.csv",  col:"cyclone_score",  label:"Cyclone",               icon:"🌀", weight:0.20},
   {key:"heat",     file:"precomputed_heat_scores.csv",     col:"heat_score",     label:"Heat Stress",            icon:"🔥", weight:0.20},
-  {key:"rainfall", file:"precomputed_rainfall_scores.csv", col:"rainfall_score", label:"Extreme Rainfall",       icon:"🌧", weight:0.20},
+  {key:"rainfall", file:"precomputed_rainfall_scores.csv", col:"score_A", label:"Extreme Rainfall",       icon:"🌧", weight:0.20},
   {key:"drought",  file:"precomputed_drought_scores.csv",  col:"drought_score",  label:"Drought",                icon:"🌵", weight:0.15},
   {key:"flood",    file:"precomputed_flood_scores.csv",    col:"flood_score",    label:"River Flood",            icon:"🌊", weight:0.15},
   {key:"gsi",      file:"precomputed_gsi_scores.csv",      col:"gsi_score",      label:"Groundwater Stress",     icon:"💧", weight:0.10},
@@ -964,6 +978,28 @@ const SCORE_FILES = [
 
 // No static coming-soon entries — all 6 hazards are now in SCORE_FILES
 const COMING_SOON = [];
+
+// ── Exposure sub-indicators (from precomputed_exposure_scores.csv) ────────────
+const EXPOSURE_INDICATORS = [
+  {col:'pop_density_score', label:'Population Density', icon:'👥',
+   desc:'People per km² (WorldPop 2020, log-normalised). Higher scores mean more people at risk from any hazard event.'},
+  {col:'ob_score',          label:'Building Footprint', icon:'🏗',
+   desc:'Open Buildings density (Google Open Buildings 2023). Captures structure count as a direct measure of built assets exposed to hazard events.'},
+  {col:'nightlights_score', label:'Economic Activity',  icon:'💡',
+   desc:'Nighttime light intensity (VIIRS 2023, log-normalised). Proxy for economic assets and formal activity density at risk from climate events.'},
+];
+
+// ── Vulnerability sub-indicators (from precomputed_vulnerability_scores.csv) ──
+const VULNERABILITY_INDICATORS = [
+  {col:'stunting_score',       label:'Child Stunting',    icon:'🍽',
+   desc:'Under-5 stunting rate (NFHS-5). A simultaneous proxy for food insecurity, sanitation gaps, and income poverty.'},
+  {col:'literacy_score',       label:'Female Schooling',  icon:'📚',
+   desc:'Women aged 6+ who ever attended school (NFHS-5). Educational adaptive capacity — a leading predictor of climate resilience.'},
+  {col:'sanitation_score',     label:'Sanitation Access', icon:'🚰',
+   desc:'Households using improved sanitation (NFHS-5). Directly relevant to flood-borne disease risk and infrastructure resilience.'},
+  {col:'child_marriage_score', label:'Child Marriage',    icon:'⚠️',
+   desc:'Women aged 20–24 married before 18 (NFHS-5). Gender and social inequality — a core IPCC AR6 WG2 vulnerability dimension.'},
+];
 
 const JUSTIFICATIONS = {
   cyclone:{
@@ -1037,6 +1073,7 @@ let baseData = null;
 let scoreData = null;
 let geoIndex = null;
 let geojsonFeatures = null;
+let districtFeatures = null; // india_districts.geojson — tiles perfectly, no gaps
 let leafletMap = null;
 let dataLoaded = false;
 let acIndex = [];
@@ -1121,11 +1158,22 @@ const resetBtn = document.getElementById('reset-btn');
 // ── MAPPLS — full India street address coverage ───────────────────────────────
 const MAPPLS_KEY = 'erjbcfejzefqfkabayozplwgpeermjxxsvip';
 
-// Timeout wrapper
-function fetchWithTimeout(url, opts={}, ms=4000){
+// Timeout wrapper — handles both fetchWithTimeout(url, opts, ms) and fetchWithTimeout(url, ms)
+async function fetchWithTimeout(url, optsOrMs={}, ms=8000){
+  const opts    = (typeof optsOrMs === 'number') ? {} : optsOrMs;
+  const timeout = (typeof optsOrMs === 'number') ? optsOrMs : ms;
   const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), ms);
-  return fetch(url, {...opts, signal:ctrl.signal}).finally(()=>clearTimeout(t));
+  const t = setTimeout(()=>ctrl.abort(), timeout);
+  try{
+    const r = await fetch(url, {...opts, signal:ctrl.signal});
+    clearTimeout(t);
+    if(!r.ok) throw new Error('HTTP '+r.status+' '+url);
+    return r;
+  }catch(e){
+    clearTimeout(t);
+    if(e.name==='AbortError') throw new Error('Timed out: '+url);
+    throw e;
+  }
 }
 
 // Mappls Autocomplete — tries multiple endpoint styles, returns first that works
@@ -1613,10 +1661,10 @@ function buildDistrictPercentileIndex(){
     const d  = (dk ? baseRow[dk] : '').toLowerCase().trim();
     const s  = (sk ? baseRow[sk] : '').toLowerCase().trim();
 
+    // Index hazard scores
     for(const cfg of SCORE_FILES){
       const v = sc[cfg.col];
       if(v==null || isNaN(v)) continue;
-      // district
       if(d||s){
         const distKey = s+'|'+d;
         if(!districtPctIndex.has(distKey)) districtPctIndex.set(distKey,{});
@@ -1624,16 +1672,34 @@ function buildDistrictPercentileIndex(){
         if(!db[cfg.col]) db[cfg.col]=[];
         db[cfg.col].push(v);
       }
-      // state
       if(s){
         if(!statePctIndex.has(s)) statePctIndex.set(s,{});
         const sb = statePctIndex.get(s);
         if(!sb[cfg.col]) sb[cfg.col]=[];
         sb[cfg.col].push(v);
       }
-      // national
       if(!nationalPctIndex[cfg.col]) nationalPctIndex[cfg.col]=[];
       nationalPctIndex[cfg.col].push(v);
+    }
+    // Also index exposure, vulnerability, and composite score for percentile lookup
+    const extraCols = ['exposure_score','vulnerability_score','pop_density_score','ob_score','nightlights_score','stunting_score','literacy_score','sanitation_score','child_marriage_score'];
+    for(const col of extraCols){
+      const v = sc[col];
+      if(v==null || isNaN(v)) continue;
+      if(!nationalPctIndex[col]) nationalPctIndex[col]=[];
+      nationalPctIndex[col].push(v);
+    }
+    // Composite score — equal weight of hazard avg + exposure + vulnerability
+    const hVals = SCORE_FILES.map(c=>sc[c.col]).filter(v=>v!=null&&!isNaN(v));
+    const hAvg  = hVals.length ? hVals.reduce((a,b)=>a+b,0)/hVals.length : null;
+    const eVal  = sc['exposure_score'];
+    const vVal  = sc['vulnerability_score'];
+    const pillars = [hAvg,eVal!=null&&!isNaN(eVal)?eVal:null,vVal!=null&&!isNaN(vVal)?vVal:null].filter(x=>x!=null);
+    if(pillars.length){
+      const comp = pillars.reduce((a,b)=>a+b,0)/pillars.length;
+      if(!nationalPctIndex['__composite']) nationalPctIndex['__composite']=[];
+      nationalPctIndex['__composite'].push(comp);
+      sc['__composite'] = comp; // cache on the score object
     }
   }
   for(const [,cols] of districtPctIndex) for(const c in cols) cols[c].sort((a,b)=>a-b);
@@ -1710,15 +1776,64 @@ async function initData(){
   for(const cfg of SCORE_FILES){
     try{
       const rows = await loadCSV(cfg.file);
+      if(!rows.length){ console.warn('Empty CSV:', cfg.file); continue; }
+
+      // Auto-detect score column — exact match first, then fuzzy
+      const allCols = Object.keys(rows[0]);
+      let scoreCol = allCols.find(k => k === cfg.col)
+        || allCols.find(k => k.toLowerCase() === cfg.col.toLowerCase())
+        || allCols.find(k => k.toLowerCase().replace(/[^a-z]/g,'') === cfg.col.toLowerCase().replace(/[^a-z]/g,''))
+        || allCols.find(k => k.toLowerCase().includes(cfg.key) && (k.toLowerCase().includes('score') || k.toLowerCase().includes('risk')))
+        || allCols.find(k => k.toLowerCase().includes(cfg.key));
+
+      if(!scoreCol){
+        console.warn(`${cfg.file}: cannot find column "${cfg.col}". Available: ${allCols.join(', ')}`);
+        continue;
+      }
+      if(scoreCol !== cfg.col) console.info(`${cfg.file}: using column "${scoreCol}" (expected "${cfg.col}")`);
+
       for(const r of rows){
         const pinCol = Object.keys(r).find(k=>k.toLowerCase().includes('pin'));
         if(!pinCol) continue;
         const pin = normPin(r[pinCol]);
         if(!scoreData.has(pin)) scoreData.set(pin,{});
-        const val = parseFloat(r[cfg.col]);
+        const val = parseFloat(r[scoreCol]);
         if(!isNaN(val)) scoreData.get(pin)[cfg.col] = val;
       }
-    } catch(e){ console.warn('Could not load', cfg.file); }
+      console.log(`Loaded ${cfg.file}: ${rows.length} rows, col="${scoreCol}"`);
+    } catch(e){ console.warn('Could not load', cfg.file, e.message); }
+  }
+
+  // ── Load Exposure + Vulnerability CSVs ──────────────────────────────────
+  // ── Load Exposure + Vulnerability CSVs — non-blocking with timeout ──────
+  // If files are missing/slow, app continues normally; pillar scores show N/A
+  setLoading('Loading exposure & vulnerability scores…');
+  const extraCsvs = [
+    { file:'precomputed_exposure_scores.csv',
+      cols:['exposure_score','pop_density_score','ob_score','nightlights_score'] },
+    { file:'precomputed_vulnerability_scores.csv',
+      cols:['vulnerability_score','stunting_score','literacy_score','sanitation_score','child_marriage_score'] },
+  ];
+  const loadCSVSafe = (file, ms=12000) => Promise.race([
+    loadCSV(file),
+    new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), ms))
+  ]).catch(e => { console.warn('Skipping', file, '—', e.message); return []; });
+
+  for(const ec of extraCsvs){
+    const rows = await loadCSVSafe(ec.file);
+    if(!rows.length) continue;
+    for(const r of rows){
+      const pinCol = Object.keys(r).find(k=>k.toLowerCase().includes('pin'));
+      if(!pinCol) continue;
+      const pin = normPin(r[pinCol]);
+      if(!scoreData.has(pin)) scoreData.set(pin,{});
+      const entry = scoreData.get(pin);
+      for(const col of ec.cols){
+        const val = parseFloat(r[col]);
+        if(!isNaN(val)) entry[col] = val;
+      }
+    }
+    console.log('Loaded', ec.file, ':', rows.length, 'rows');
   }
 
   // ── Build district percentile index ──────────────────────────────────────
@@ -1729,22 +1844,35 @@ async function initData(){
   setLoading('Loading spatial index…');
   try{
     const resp = await fetch('pin_feature_index.json');
-    geoIndex = await resp.json();
-  } catch(e){ console.warn('pin_feature_index.json not found'); }
+    if(resp.ok) geoIndex = await resp.json();
+    else console.warn('pin_feature_index.json not found (HTTP '+resp.status+')');
+  } catch(e){ console.warn('pin_feature_index.json not found:', e.message); }
 
   // Load pins that have no polygon boundary (point-only, 433 pins)
   try{
     const resp = await fetch('missing_pins.json');
-    missingPinsData = await resp.json();
-    console.log('Loaded', Object.keys(missingPinsData).length, 'boundary-pending pins');
-  } catch(e){ console.warn('missing_pins.json not found'); }
+    if(resp.ok){
+      missingPinsData = await resp.json();
+      console.log('Loaded', Object.keys(missingPinsData).length, 'boundary-pending pins');
+    } else console.warn('missing_pins.json not found (HTTP '+resp.status+')');
+  } catch(e){ console.warn('missing_pins.json not found:', e.message); }
 
   setLoading('Loading boundary data…');
   try{
     const resp = await fetch('india_pincodes_simplified.geojson');
-    const gj = await resp.json();
-    geojsonFeatures = gj.features;
-  } catch(e){ console.warn('GeoJSON not loaded'); }
+    if(resp.ok){ const gj = await resp.json(); geojsonFeatures = gj.features; }
+    else console.warn('india_pincodes_simplified.geojson not found (HTTP '+resp.status+')');
+  } catch(e){ console.warn('GeoJSON not loaded:', e.message); }
+
+  // Load district boundaries — used as gap-free solid base layer everywhere
+  try{
+    const respD = await fetch('india_districts.geojson');
+    if(respD.ok){
+      const dj = await respD.json();
+      districtFeatures = dj.features;
+      indiaDistrictGeo = dj; // share reference so Explore India uses cached version
+    } else console.warn('india_districts.geojson not found (HTTP '+respD.status+')');
+  } catch(e){ console.warn('Districts GeoJSON not loaded:', e.message); }
 
   dataLoaded = true;
   document.getElementById('loading').style.display='none';
@@ -1777,19 +1905,24 @@ function renderPinView(idx){
 
   const scores   = scoreData.get(pin)||{};
 
-  // Weighted composite — weights from SCORE_FILES
-  const WEIGHTS = {};
-  SCORE_FILES.forEach(cfg => { WEIGHTS[cfg.col] = cfg.weight || (1/SCORE_FILES.length); });
-  let weightedSum = 0, weightTotal = 0;
+  // ── Hazard composite — equal weight of 6 perils (INFORM equal-weight framework) ──
+  let hSum = 0, hCount = 0;
   for(const cfg of SCORE_FILES){
     const v = scores[cfg.col];
-    if(v!=null && !isNaN(v)){
-      const w = WEIGHTS[cfg.col];
-      weightedSum += v * w;
-      weightTotal += w;
-    }
+    if(v!=null && !isNaN(v)){ hSum += v; hCount++; }
   }
-  const composite = weightTotal > 0 ? weightedSum / weightTotal : null;
+  const hazardComposite = hCount > 0 ? hSum / hCount : null;
+
+  // ── Exposure + Vulnerability composites (precomputed) ────────────────────
+  const exposureComposite     = (scores['exposure_score'] != null && !isNaN(scores['exposure_score']))
+    ? scores['exposure_score'] : null;
+  const vulnerabilityComposite = (scores['vulnerability_score'] != null && !isNaN(scores['vulnerability_score']))
+    ? scores['vulnerability_score'] : null;
+
+  // ── Overall composite = (H + E + V) / 3 — IPCC/INFORM equal weights ─────
+  const pillarArr = [hazardComposite, exposureComposite, vulnerabilityComposite].filter(v => v != null);
+  const composite = pillarArr.length > 0 ? pillarArr.reduce((a,b)=>a+b,0) / pillarArr.length : null;
+
   const vals = SCORE_FILES.map(c=>scores[c.col]).filter(v=>v!=null&&!isNaN(v));
   const ovr   = riskLevel(composite);
 
@@ -1806,32 +1939,69 @@ function renderPinView(idx){
     </div>
     ${exportBtns}`;
 
-  // METRICS STRIP
+  // METRICS STRIP — clean two-section design
+  const hazHex = riskLevel(hazardComposite).hex;
+  const expHex = riskLevel(exposureComposite).hex;
+  const vulHex = riskLevel(vulnerabilityComposite).hex;
+
   document.getElementById('metrics-strip').innerHTML=`
-    <div class="metric">
-      <div class="metric-lbl">District</div>
-      <div class="metric-val" style="font-size:1rem;">${district}</div>
+    <!-- Left: location meta -->
+    <div style="display:flex;gap:0;flex-shrink:0;border-right:2px solid var(--rule-light);padding-right:1.5rem;margin-right:1.5rem;align-items:stretch;">
+      <div class="metric">
+        <div class="metric-lbl">District</div>
+        <div class="metric-val" style="font-size:1rem;">${district}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">State</div>
+        <div class="metric-val" style="font-size:1rem;">${state}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Area</div>
+        <div class="metric-val">${areaM2?((areaM2/1e6).toFixed(2)+' km²'):'N/A'}</div>
+      </div>
     </div>
-    <div class="metric">
-      <div class="metric-lbl">State</div>
-      <div class="metric-val" style="font-size:1rem;">${state}</div>
-    </div>
-    <div class="metric">
-      <div class="metric-lbl">Area</div>
-      <div class="metric-val">${areaM2?((areaM2/1e6).toFixed(3)+' km²'):'N/A'}</div>
-    </div>
-    <div class="metric">
-      <div class="metric-lbl">Perimeter</div>
-      <div class="metric-val">${perimM?((perimM/1000).toFixed(2)+' km'):'N/A'}</div>
-    </div>
-    <div class="metric">
-      <div class="metric-lbl">Hazards Scored</div>
-      <div class="metric-val">${vals.length} / ${SCORE_FILES.length}</div>
-    </div>
-    <div class="metric" style="border-left:3px solid ${ovr.hex};">
-      <div class="metric-lbl" title="Weighted: Cyclone 20%, Rainfall 20%, Heat 20%, Drought 15%, Flood 15%, GSI 10%">Composite Risk Score ⓘ</div>
-      <div class="metric-val" style="color:${ovr.hex};">${composite!=null?composite.toFixed(1)+' / 100':'N/A'}</div>
-      <div style="font-size:0.68rem;color:var(--text-3);margin-top:2px;">6-peril weighted average</div>
+
+    <!-- Right: PCRA risk scores — H × E × V = Overall -->
+    <div style="display:flex;gap:0;align-items:stretch;flex:1;">
+
+      <div class="metric" style="flex:1;border-left:3px solid ${hazHex};background:${hazHex}08;">
+        <div class="metric-lbl" style="display:flex;align-items:center;gap:0.3rem;">
+          <span style="font-size:0.85rem;">⚡</span> Hazard
+        </div>
+        <div class="metric-val" style="color:${hazHex};font-size:1.35rem;">${hazardComposite!=null?hazardComposite.toFixed(1):'—'}<span style="font-size:0.75rem;font-weight:400;color:var(--text-3);"> /100</span></div>
+
+      </div>
+
+      <div style="display:flex;align-items:center;padding:0 0.5rem;color:var(--text-3);font-size:1rem;font-weight:300;">×</div>
+
+      <div class="metric" style="flex:1;border-left:3px solid ${expHex};background:${expHex}08;">
+        <div class="metric-lbl" style="display:flex;align-items:center;gap:0.3rem;">
+          <span style="font-size:0.85rem;">🏘</span> Exposure
+        </div>
+        <div class="metric-val" style="color:${expHex};font-size:1.35rem;">${exposureComposite!=null?exposureComposite.toFixed(1):'—'}<span style="font-size:0.75rem;font-weight:400;color:var(--text-3);"> /100</span></div>
+
+      </div>
+
+      <div style="display:flex;align-items:center;padding:0 0.5rem;color:var(--text-3);font-size:1rem;font-weight:300;">×</div>
+
+      <div class="metric" style="flex:1;border-left:3px solid ${vulHex};background:${vulHex}08;">
+        <div class="metric-lbl" style="display:flex;align-items:center;gap:0.3rem;">
+          <span style="font-size:0.85rem;">👥</span> Vulnerability
+        </div>
+        <div class="metric-val" style="color:${vulHex};font-size:1.35rem;">${vulnerabilityComposite!=null?vulnerabilityComposite.toFixed(1):'—'}<span style="font-size:0.75rem;font-weight:400;color:var(--text-3);"> /100</span></div>
+
+      </div>
+
+      <div style="display:flex;align-items:center;padding:0 0.5rem;color:var(--text-3);font-size:1rem;font-weight:300;">=</div>
+
+      <div class="metric" style="flex:1;border-left:3px solid ${ovr.hex};background:${ovr.hex}12;">
+        <div class="metric-lbl" style="display:flex;align-items:center;gap:0.3rem;" title="PCRA: Physical Climate Risk = Hazard × Exposure × Vulnerability (IPCC/INFORM equal weights)">
+          Overall Risk <span style="font-size:0.7rem;opacity:0.5;">ⓘ</span>
+        </div>
+        <div class="metric-val" style="color:${ovr.hex};font-size:1.45rem;font-weight:800;">${composite!=null?composite.toFixed(1):'—'}<span style="font-size:0.75rem;font-weight:400;color:var(--text-3);"> /100</span></div>
+        <div style="font-size:0.68rem;color:${ovr.hex};margin-top:1px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">${ovr.label}${(()=>{const npr=getNationalPercentile(pin,'__composite');return npr?` &nbsp;·&nbsp; <span style="color:var(--text-3);font-weight:600;">${npr.pct}th pctile</span>`:'';})()}</div>
+      </div>
+
     </div>`;
 
   // MAP
@@ -1848,13 +2018,19 @@ function renderPinView(idx){
   async function loadAndRenderPinBoundary(){
     let pinFeatures = [];
 
-    // Step 1: Try district geo file (preferred — smaller, faster)
+    // Normalise helper — strips spaces, punctuation, lowercases for fuzzy matching
+    const norm = s => (s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+
+    // Step 1: Try district geo file via drilldownIndex with fuzzy matching
     if(drilldownIndex){
-      const stateKey = Object.keys(drilldownIndex).find(s=>
-        s.toLowerCase().replace(/\s+/g,'')===state.toLowerCase().replace(/\s+/g,''));
+      const stateKey = Object.keys(drilldownIndex).find(s=> norm(s)===norm(state))
+        || Object.keys(drilldownIndex).find(s=> norm(state).includes(norm(s)) || norm(s).includes(norm(state)));
+
       if(stateKey){
-        const distKey = Object.keys(drilldownIndex[stateKey].districts).find(d=>
-          d.toLowerCase().replace(/\s+/g,'')===district.toLowerCase().replace(/\s+/g,''));
+        const distKey = Object.keys(drilldownIndex[stateKey].districts).find(d=> norm(d)===norm(district))
+          || Object.keys(drilldownIndex[stateKey].districts).find(d=>
+              norm(district).includes(norm(d)) || norm(d).includes(norm(district)));
+
         if(distKey){
           const dd = drilldownIndex[stateKey].districts[distKey];
           const key = stateKey+'|'+distKey;
@@ -1864,7 +2040,23 @@ function renderPinView(idx){
           }
           if(stateGeoCache[key]){
             pinFeatures = stateGeoCache[key].features.filter(f=>
-              normPin(f.properties.pin_code||f.properties.pincode||'')===pin);
+              normPin(f.properties.pin_code||f.properties.pincode||f.properties.PIN||'')===pin);
+          }
+        }
+
+        // Step 1b: If district match failed, search ALL districts in the state
+        if(!pinFeatures.length && stateKey){
+          for(const [dKey, dd] of Object.entries(drilldownIndex[stateKey].districts)){
+            const cacheKey = stateKey+'|'+dKey;
+            if(!stateGeoCache[cacheKey] && dd.file){
+              try{ const r=await fetchWithTimeout('./'+dd.file); stateGeoCache[cacheKey]=await r.json(); }
+              catch(e){}
+            }
+            if(stateGeoCache[cacheKey]){
+              const found = stateGeoCache[cacheKey].features.filter(f=>
+                normPin(f.properties.pin_code||f.properties.pincode||f.properties.PIN||'')===pin);
+              if(found.length){ pinFeatures = found; break; }
+            }
           }
         }
       }
@@ -1876,12 +2068,26 @@ function renderPinView(idx){
         normPin(f.properties.pin_code||f.properties.pincode||f.properties.PIN||'')===pin);
     }
 
+    // Step 3: Last resort — search ALL cached state geo files
+    if(!pinFeatures.length && drilldownIndex){
+      outer: for(const [sk, sd] of Object.entries(drilldownIndex)){
+        for(const [dk, dd] of Object.entries(sd.districts)){
+          const cacheKey = sk+'|'+dk;
+          if(stateGeoCache[cacheKey]){
+            const found = stateGeoCache[cacheKey].features.filter(f=>
+              normPin(f.properties.pin_code||f.properties.pincode||f.properties.PIN||'')===pin);
+            if(found.length){ pinFeatures = found; break outer; }
+          }
+        }
+      }
+    }
+
     const mapNote = document.getElementById('map-approx-note');
 
     if(pinFeatures.length > 0){
       // Real surveyed polygon — clean render
       const layer = L.geoJSON({type:'FeatureCollection',features:pinFeatures},{
-        style:{ color:ovr.hex, fillColor:ovr.hex, weight:2, fillOpacity:0.18 }
+        style:{ color:ovr.hex, fillColor:ovr.hex, weight:2.5, fillOpacity:0.35 }
       }).addTo(leafletMap);
       leafletMap.fitBounds(layer.getBounds(),{maxZoom:14,padding:[20,20]});
       if(mapNote) mapNote.style.display='none';
@@ -2016,69 +2222,16 @@ function renderPinView(idx){
   if(_sl){ _sl.value=20; document.getElementById('nearby-km-label').textContent='20km'; }
   const _cnt=document.getElementById('nearby-count'); if(_cnt) _cnt.textContent='';
 
-  // HAZARD SCORES
-  let html = '';
-  let anyScore = false;
-  for(const cfg of SCORE_FILES){
-    const score = scores[cfg.col];
-    if(score==null||isNaN(score)) continue;
-    anyScore = true;
-    const {label,hex} = riskLevel(score);
-    const pct = Math.min(Math.max(score,0),100);
-    const desc = (JUSTIFICATIONS[cfg.key]||{})[label]||'';
+  // Store state for tab switching
+  window._pillar = { pin, district, state, scores, hazardComposite, exposureComposite, vulnerabilityComposite };
 
-    // Percentile pills — national inline with score header only; state+district inside drawer
-    const npr = getNationalPercentile(pin, cfg.col);
-    let natPill = '';
-    if(npr){ const ctx=pctContext(npr.pct,'India','national'); natPill=`<span style="font-size:0.7rem;font-weight:700;padding:3px 11px;border-radius:2px;background:${ctx.lightBg};color:${ctx.solidColor};border:1.5px solid ${ctx.borderColor};white-space:nowrap;letter-spacing:0.02em;" title="${npr.pct}th percentile out of ${npr.n.toLocaleString()} PINs in India">${ctx.text}</span>`; }
-
-    html += `
-      <div class="hazard-row" onclick="openDrawer('${cfg.key}','${cfg.icon}','${cfg.label}',${score},'${pin}','${district}','${state}')">
-        <div class="hz-top">
-          <div class="hz-name"><span class="hz-icon">${cfg.icon}</span>${cfg.label}</div>
-          <div class="hz-right" style="flex-wrap:wrap;gap:0.4rem;justify-content:flex-end;">
-            <span class="hz-score" style="color:${hex}">${score.toFixed(1)}<span style="color:var(--text-3);font-size:0.82rem;font-weight:400"> / 100</span></span>
-            <span class="hz-badge" style="background:${riskBg(hex)};border-color:${riskBorder(hex)};color:${hex};">${label}</span>
-            ${natPill}
-          </div>
-        </div>
-        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${hex}"></div></div>
-        <div class="hz-desc">${desc}</div>
-        <span class="click-hint">View details →</span>
-      </div>`;
-  }
-  // Show SCORE_FILES entries with no data as Coming Soon (e.g. flood CSV not yet deployed)
-  for(const cfg of SCORE_FILES){
-    const score = scores[cfg.col];
-    if(score!=null && !isNaN(score)) continue; // already rendered above
-    html += `
-      <div class="hazard-row coming-soon">
-        <div class="hz-top">
-          <div class="hz-name"><span class="hz-icon">${cfg.icon}</span>${cfg.label}</div>
-          <div class="hz-right"><span class="coming-badge">Coming Soon</span></div>
-        </div>
-        <div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--rule)"></div></div>
-        <div class="hz-desc" style="font-style:italic;">Score data not yet available for this hazard.</div>
-      </div>`;
-  }
-  // Static coming-soon entries (Water Table etc.)
-  for(const cs of COMING_SOON){
-    html += `
-      <div class="hazard-row coming-soon">
-        <div class="hz-top">
-          <div class="hz-name"><span class="hz-icon">${cs.icon}</span>${cs.label}</div>
-          <div class="hz-right"><span class="coming-badge">Coming Soon</span></div>
-        </div>
-        <div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--rule)"></div></div>
-        <div class="hz-desc" style="font-style:italic;">Scoring under development.</div>
-      </div>`;
-  }
-  document.getElementById('scores-body').innerHTML = anyScore ? html : '<div class="no-data">No hazard data available for this PIN.</div>';
+  // Render default hazard tab
+  switchPillarTab('hazard');
 
   // Load async modules
   loadWeatherTrends(lat, lon, district, state);
   loadNews(district, state, pin);
-  loadHeroSummary(pin, district, state, scores, composite, ovr);
+  loadHeroSummary(pin, district, state, scores, composite, ovr, hazardComposite, exposureComposite, vulnerabilityComposite);
 
   // Sync column heights after DOM settles
 
@@ -2093,7 +2246,7 @@ function renderMultiCompare(){
 
   const getField=(row,keys)=>{for(const k of keys){const f=Object.keys(row).find(c=>c.toLowerCase().replace(/[^a-z]/g,'')===k.toLowerCase().replace(/[^a-z]/g,''));if(f&&row[f])return row[f];}return null;};
   const WEIGHTS={};
-  SCORE_FILES.forEach(cfg=>{ WEIGHTS[cfg.col]=cfg.weight||(1/SCORE_FILES.length); });
+  SCORE_FILES.forEach(cfg=>{ WEIGHTS[cfg.col]=1/SCORE_FILES.length; });
 
   let html=`<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
     <thead>
@@ -2147,7 +2300,7 @@ function renderMultiCompare(){
 function exportReport(format){
   const getField=(row,keys)=>{for(const k of keys){const f=Object.keys(row).find(c=>c.toLowerCase().replace(/[^a-z]/g,'')===k.toLowerCase().replace(/[^a-z]/g,''));if(f&&row[f])return row[f];}return null;};
   const WEIGHTS={};
-  SCORE_FILES.forEach(cfg=>{ WEIGHTS[cfg.col]=cfg.weight||(1/SCORE_FILES.length); });
+  SCORE_FILES.forEach(cfg=>{ WEIGHTS[cfg.col]=1/SCORE_FILES.length; });
   const now=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 
   let reportContent = `INDIA PHYSICAL CLIMATE RISK EXPLORER\nGenerated: ${now}\n${'='.repeat(60)}\n\n`;
@@ -2530,7 +2683,147 @@ function formatAiBullets(text){
   return items + `<div class="ai-disclaimer">&#x1F916; <strong>AI Assessed</strong> &mdash; For informational purposes only. Verify with official sources for critical decisions.</div>`;
 }
 
-async function loadHeroSummary(pin, district, state, scores, composite, ovr){
+// ─── IPCC PILLAR TAB SWITCHER ─────────────────────────────────────────────────
+
+function switchPillarTab(pillar){
+  ['hazard','exposure','vulnerability'].forEach(p => {
+    const btn = document.getElementById('pillar-tab-'+p);
+    if(!btn) return;
+    const active = p === pillar;
+    btn.style.borderBottom = active ? '2px solid var(--amber)' : '2px solid transparent';
+    btn.style.color = active ? 'var(--navy)' : 'var(--text-3)';
+    btn.style.fontWeight = active ? '700' : '600';
+  });
+  const hint = document.getElementById('click-row-hint');
+  if(hint) hint.style.display = pillar === 'hazard' ? '' : 'none';
+  const d = window._pillar || {};
+  if(pillar === 'hazard')        renderHazardTab(d.scores||{}, d.pin, d.district, d.state);
+  else if(pillar === 'exposure') renderExposureTab(d.scores||{}, d.exposureComposite);
+  else                           renderVulnerabilityTab(d.scores||{}, d.vulnerabilityComposite);
+}
+
+function renderHazardTab(scores, pin, district, state){
+  let html = '';
+  let anyScore = false;
+  for(const cfg of SCORE_FILES){
+    const score = scores[cfg.col];
+    if(score==null||isNaN(score)) continue;
+    anyScore = true;
+    const {label,hex} = riskLevel(score);
+    const pct = Math.min(Math.max(score,0),100);
+    const desc = (JUSTIFICATIONS[cfg.key]||{})[label]||'';
+    const npr = getNationalPercentile(pin, cfg.col);
+    let natPill = '';
+    if(npr){ const ctx=pctContext(npr.pct,'India','national'); natPill=`<span style="font-size:0.7rem;font-weight:700;padding:3px 11px;border-radius:2px;background:${ctx.lightBg};color:${ctx.solidColor};border:1.5px solid ${ctx.borderColor};white-space:nowrap;letter-spacing:0.02em;" title="${npr.pct}th percentile out of ${npr.n.toLocaleString()} PINs in India">${ctx.text}</span>`; }
+    html += `
+      <div class="hazard-row" onclick="openDrawer('${cfg.key}','${cfg.icon}','${cfg.label}',${score},'${pin}','${district}','${state}')">
+        <div class="hz-top">
+          <div class="hz-name"><span class="hz-icon">${cfg.icon}</span>${cfg.label}</div>
+          <div class="hz-right" style="flex-wrap:wrap;gap:0.4rem;justify-content:flex-end;">
+            <span class="hz-score" style="color:${hex}">${score.toFixed(1)}<span style="color:var(--text-3);font-size:0.82rem;font-weight:400"> / 100</span></span>
+            <span class="hz-badge" style="background:${riskBg(hex)};border-color:${riskBorder(hex)};color:${hex};">${label}</span>
+            ${natPill}
+          </div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${hex}"></div></div>
+        <div class="hz-desc">${desc}</div>
+        <span class="click-hint">View details →</span>
+      </div>`;
+  }
+  for(const cfg of SCORE_FILES){
+    if(scores[cfg.col]!=null && !isNaN(scores[cfg.col])) continue;
+    html += `<div class="hazard-row coming-soon"><div class="hz-top"><div class="hz-name"><span class="hz-icon">${cfg.icon}</span>${cfg.label}</div><div class="hz-right"><span class="coming-badge">Coming Soon</span></div></div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--rule)"></div></div><div class="hz-desc" style="font-style:italic;">Score data not yet available.</div></div>`;
+  }
+  document.getElementById('scores-body').innerHTML = anyScore ? html : '<div class="no-data">No hazard data available for this PIN.</div>';
+}
+
+function renderExposureTab(scores, composite){
+  const c = composite != null ? composite : scores['exposure_score'];
+  const {label:cLbl, hex:cHex} = riskLevel(c);
+  let html = '';
+  if(c != null && !isNaN(c)){
+    const expPin = window._pillar && window._pillar.pin;
+    const expNpr = expPin ? getNationalPercentile(expPin, 'exposure_score') : null;
+    let expPill = '';
+    if(expNpr){ const ctx=pctContext(expNpr.pct,'India','national'); expPill=`<span style="font-size:0.7rem;font-weight:700;padding:3px 11px;border-radius:2px;background:${ctx.lightBg};color:${ctx.solidColor};border:1.5px solid ${ctx.borderColor};white-space:nowrap;letter-spacing:0.02em;" title="${expNpr.pct}th percentile out of ${expNpr.n.toLocaleString()} PINs in India">${ctx.text}</span>`; }
+    html += `<div style="padding:0.9rem 1.2rem;background:rgba(107,63,160,0.06);border-bottom:1px solid var(--rule-light);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6b3fa0;">🏘 Exposure Score</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          ${expPill}
+          <span style="font-size:1.2rem;font-weight:800;color:${cHex};">${c.toFixed(1)}<span style="font-size:0.8rem;font-weight:400;color:var(--text-3);"> / 100 &nbsp;·&nbsp; ${cLbl}</span></span>
+        </div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.min(c,100)}%;background:${cHex}"></div></div>
+      <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.5rem;">Equal-weight average of population density + built-up area &nbsp;·&nbsp; WorldPop & GHSL 2020</div>
+    </div>`;
+  }
+  for(const ind of EXPOSURE_INDICATORS){
+    const score = scores[ind.col];
+    if(score==null||isNaN(score)){
+      html += `<div class="hazard-row coming-soon"><div class="hz-top"><div class="hz-name"><span class="hz-icon">${ind.icon}</span>${ind.label}</div><div class="hz-right"><span class="coming-badge">No data</span></div></div></div>`;
+      continue;
+    }
+    const {label,hex} = riskLevel(score);
+    html += `<div class="hazard-row">
+      <div class="hz-top">
+        <div class="hz-name"><span class="hz-icon">${ind.icon}</span>${ind.label}</div>
+        <div class="hz-right" style="gap:0.4rem;">
+          <span class="hz-score" style="color:${hex}">${score.toFixed(1)}<span style="color:var(--text-3);font-size:0.82rem;font-weight:400"> / 100</span></span>
+          <span class="hz-badge" style="background:${riskBg(hex)};border-color:${riskBorder(hex)};color:${hex};">${label}</span>
+        </div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.min(Math.max(score,0),100)}%;background:${hex}"></div></div>
+      <div class="hz-desc">${ind.desc}</div>
+    </div>`;
+  }
+  document.getElementById('scores-body').innerHTML = html || '<div class="no-data">No exposure data available for this PIN.</div>';
+}
+
+function renderVulnerabilityTab(scores, composite){
+  const c = composite != null ? composite : scores['vulnerability_score'];
+  const {label:cLbl, hex:cHex} = riskLevel(c);
+  let html = '';
+  if(c != null && !isNaN(c)){
+    const vulPin = window._pillar && window._pillar.pin;
+    const vulNpr = vulPin ? getNationalPercentile(vulPin, 'vulnerability_score') : null;
+    let vulPill = '';
+    if(vulNpr){ const ctx=pctContext(vulNpr.pct,'India','national'); vulPill=`<span style="font-size:0.7rem;font-weight:700;padding:3px 11px;border-radius:2px;background:${ctx.lightBg};color:${ctx.solidColor};border:1.5px solid ${ctx.borderColor};white-space:nowrap;letter-spacing:0.02em;" title="${vulNpr.pct}th percentile out of ${vulNpr.n.toLocaleString()} PINs in India">${ctx.text}</span>`; }
+    html += `<div style="padding:0.9rem 1.2rem;background:rgba(184,92,0,0.06);border-bottom:1px solid var(--rule-light);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#b85c00;">👥 Vulnerability Score</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          ${vulPill}
+          <span style="font-size:1.2rem;font-weight:800;color:${cHex};">${c.toFixed(1)}<span style="font-size:0.8rem;font-weight:400;color:var(--text-3);"> / 100 &nbsp;·&nbsp; ${cLbl}</span></span>
+        </div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.min(c,100)}%;background:${cHex}"></div></div>
+      <div style="font-size:0.72rem;color:var(--text-3);margin-top:0.5rem;">Equal-weight average of 4 NFHS-5 indicators &nbsp;·&nbsp; District-level &nbsp;·&nbsp; INFORM methodology</div>
+    </div>`;
+  }
+  for(const ind of VULNERABILITY_INDICATORS){
+    const score = scores[ind.col];
+    if(score==null||isNaN(score)){
+      html += `<div class="hazard-row coming-soon"><div class="hz-top"><div class="hz-name"><span class="hz-icon">${ind.icon}</span>${ind.label}</div><div class="hz-right"><span class="coming-badge">No data</span></div></div></div>`;
+      continue;
+    }
+    const {label,hex} = riskLevel(score);
+    html += `<div class="hazard-row">
+      <div class="hz-top">
+        <div class="hz-name"><span class="hz-icon">${ind.icon}</span>${ind.label}</div>
+        <div class="hz-right" style="gap:0.4rem;">
+          <span class="hz-score" style="color:${hex}">${score.toFixed(1)}<span style="color:var(--text-3);font-size:0.82rem;font-weight:400"> / 100</span></span>
+          <span class="hz-badge" style="background:${riskBg(hex)};border-color:${riskBorder(hex)};color:${hex};">${label}</span>
+        </div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.min(Math.max(score,0),100)}%;background:${hex}"></div></div>
+      <div class="hz-desc">${ind.desc}</div>
+    </div>`;
+  }
+  document.getElementById('scores-body').innerHTML = html || '<div class="no-data">No vulnerability data available for this PIN.</div>';
+}
+
+async function loadHeroSummary(pin, district, state, scores, composite, ovr, hazardComposite, exposureComposite, vulnerabilityComposite){
   const card = document.getElementById('hero-summary-card');
   const lbl  = document.getElementById('hero-summary-pin-label');
   const txt  = document.getElementById('hero-summary-text');
@@ -2538,10 +2831,16 @@ async function loadHeroSummary(pin, district, state, scores, composite, ovr){
   card.style.display = 'block';
   if(heroSummaryCache[pin]){ txt.innerHTML = heroSummaryCache[pin]; return; }
   txt.innerHTML = '<span style="color:var(--text-3);font-style:italic;">&#x1F916; Generating AI summary\u2026</span>';
-  const scoreLines = SCORE_FILES
+  const hazardLines = SCORE_FILES
     .filter(c => scores[c.col] != null && !isNaN(scores[c.col]))
     .map(c => c.label+': '+scores[c.col].toFixed(1)+'/100 ('+riskLevel(scores[c.col]).label+')')
     .join('; ');
+  const pillarLines = [
+    hazardComposite   !=null ? 'Hazard: '+hazardComposite.toFixed(1)+'/100 ('+riskLevel(hazardComposite).label+')' : null,
+    exposureComposite !=null ? 'Exposure: '+exposureComposite.toFixed(1)+'/100 ('+riskLevel(exposureComposite).label+')' : null,
+    vulnerabilityComposite!=null ? 'Vulnerability: '+vulnerabilityComposite.toFixed(1)+'/100 ('+riskLevel(vulnerabilityComposite).label+')' : null,
+  ].filter(Boolean).join('; ');
+  const scoreLines = hazardLines + (pillarLines ? ' | IPCC Pillars — '+pillarLines : '');
   const topHazard = SCORE_FILES
     .filter(c => scores[c.col] != null && !isNaN(scores[c.col]))
     .sort((a,b) => scores[b.col] - scores[a.col])[0];
@@ -3263,80 +3562,97 @@ async function loadNews(district, state, pin){
   const newsBody = document.getElementById('news-body');
   const newsTag  = document.getElementById('news-location-tag');
   newsTag.textContent = `${district}, ${state}`;
-  newsBody.innerHTML = '<div class="news-loading">Searching for recent climate news in this area…</div>';
+  newsBody.innerHTML = '<div class="news-loading">Fetching relevant climate events for this area…</div>';
 
-  const typeIcon  = {flood:'🌊', heat:'🔥', cyclone:'🌀', drought:'🌵', fire:'🔥', storm:'⛈', other:'📋'};
-  const typeColor = {flood:'#1565c0', heat:'#c0392b', cyclone:'#6b21a8', drought:'#b8860b', fire:'#c04020', storm:'#1a3a5c', other:'#4a453d'};
+  const typeIcon  = {flood:'🌊',heat:'🔥',cyclone:'🌀',drought:'🌵',landslide:'⛰',fire:'🔥',storm:'⛈',other:'📋'};
+  const typeColor = {flood:'#1565c0',heat:'#c0392b',cyclone:'#6b21a8',drought:'#b8860b',landslide:'#5d4037',fire:'#c04020',storm:'#1a3a5c',other:'#4a453d'};
 
   try {
-    const scores = scoreData.get(pin) || {};
-    const topHazards = SCORE_FILES
-      .filter(c => scores[c.col] != null && !isNaN(scores[c.col]))
-      .sort((a,b) => scores[b.col] - scores[a.col])
-      .slice(0,2).map(c => c.label);
-
-    // Call our Netlify serverless function (keeps API key server-side)
     const response = await fetch('/.netlify/functions/ai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'news', district, state, pin, topHazards })
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({type:'rss', district, state, pin})
     });
-
-    if (!response.ok) throw new Error(`Function error: ${response.status}`);
+    if(!response.ok) throw new Error(`${response.status}`);
     const data = await response.json();
-
-    if (data.error) throw new Error(data.error);
     const items = data.items;
-    if (!Array.isArray(items) || !items.length) throw new Error('No items returned');
+    if(!Array.isArray(items)||!items.length) throw new Error('No items');
 
-    newsBody.innerHTML = items.slice(0,4).map(item => {
-      const icon  = typeIcon[item.type]  || '📋';
-      const color = typeColor[item.type] || '#4a453d';
-      const hasLink = item.url && item.url.startsWith('http');
-      const titleEl = hasLink
-        ? `<a href="${item.url}" target="_blank" rel="noopener" class="news-headline" style="display:block;margin-bottom:0.25rem;">${item.headline}</a>`
-        : `<div class="news-headline" style="cursor:default;margin-bottom:0.25rem;">${item.headline}</div>`;
+    newsBody.innerHTML = items.slice(0,5).map(item => {
+      const text = (item.title+' '+(item.description||'')).toLowerCase();
+
+      // Hazard type for icon + color
+      const type = text.includes('flood')||text.includes('inundat')||text.includes('waterlog') ? 'flood'
+        : text.includes('heat')||text.includes('heatwave')||text.includes('heat stroke') ? 'heat'
+        : text.includes('cyclone')||text.includes('storm surge') ? 'cyclone'
+        : text.includes('drought')||text.includes('dry spell')||text.includes('water scarcity') ? 'drought'
+        : text.includes('landslide') ? 'landslide'
+        : text.includes('fire')||text.includes('wildfire') ? 'fire'
+        : 'other';
+
+      // IPCC pillar badge — use server tag if available, else infer
+      const pillar = item.pillar || (
+        text.includes('displaced')||text.includes('migrant')||text.includes('water crisis')||text.includes('heat stroke')||text.includes('malnutrition') ? 'vulnerability'
+        : text.includes('crop damage')||text.includes('houses damaged')||text.includes('flood plain')||text.includes('coastal erosion')||text.includes('lakh affected') ? 'exposure'
+        : 'hazard'
+      );
+      const pillarColor = { hazard:'#1a3a5c', exposure:'#6b3fa0', vulnerability:'#b85c00' };
+      const pillarLabel = { hazard:'⚡ Hazard', exposure:'🏘 Exposure', vulnerability:'👥 Vulnerability' };
+
+      const icon  = typeIcon[type];
+      const color = typeColor[type];
+      const date  = item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '';
+      const source = item.source || (()=>{ try{ return new URL(item.link||'').hostname.replace('www.',''); }catch(e){ return 'News'; }})();
+      // description is AI-generated plain text from server
+      const summary = (item.description||'')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 220);
+
       return `
       <div class="news-item">
         <div style="display:flex;align-items:flex-start;gap:0.65rem;">
           <span style="font-size:1.1rem;flex-shrink:0;margin-top:0.1rem;">${icon}</span>
           <div style="flex:1;min-width:0;">
-            ${titleEl}
-            <div style="font-size:0.8rem;color:var(--text-2);line-height:1.65;margin-top:0.1rem;">${item.summary}</div>
+            <a href="${item.link||'#'}" target="_blank" rel="noopener" class="news-headline" style="display:block;margin-bottom:0.25rem;">${item.title}</a>
+            ${summary?`<div style="font-size:0.8rem;color:var(--text-2);line-height:1.65;margin-top:0.1rem;">${summary}</div>`:''}
             <div style="margin-top:0.45rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;font-size:0.68rem;">
-              <span style="background:${color};color:#fff;padding:1px 8px;border-radius:2px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;">${item.type}</span>
-              <span style="color:var(--text-3);">${item.date}</span>
-              <span style="color:var(--rule);">·</span>
-              <span style="font-weight:600;color:var(--text-2);">${item.source}</span>
-              ${hasLink ? `<a href="${item.url}" target="_blank" rel="noopener" style="margin-left:auto;color:var(--amber);text-decoration:none;white-space:nowrap;font-weight:600;">Read →</a>` : ''}
+              <span style="background:${color};color:#fff;padding:1px 8px;border-radius:2px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;">${type}</span>
+              <span style="background:${pillarColor[pillar]};color:#fff;padding:1px 8px;border-radius:2px;font-weight:600;letter-spacing:0.05em;opacity:0.85;">${pillarLabel[pillar]}</span>
+              ${date?`<span style="color:var(--text-3);">${date}</span><span style="color:var(--rule);">·</span>`:''}
+              <span style="font-weight:600;color:var(--text-2);">${source}</span>
+              <a href="${item.link||'#'}" target="_blank" rel="noopener" style="margin-left:auto;color:var(--amber);text-decoration:none;white-space:nowrap;font-weight:600;">Read →</a>
             </div>
           </div>
         </div>
       </div>`;
     }).join('') +
     `<div style="padding:0.5rem 1.2rem 0.7rem;font-size:0.67rem;color:var(--text-3);border-top:1px solid var(--rule-light);display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
-      <span>🤖 AI-searched summaries · Verify with primary sources for critical decisions</span>
+      <span>📡 Real climate events · Last 5 years · Google News</span>
       <a href="https://mausam.imd.gov.in/" target="_blank" rel="noopener" style="margin-left:auto;color:var(--amber);text-decoration:none;white-space:nowrap;font-weight:600;">IMD →</a>
       <a href="https://ndma.gov.in/" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:none;white-space:nowrap;font-weight:600;">NDMA →</a>
     </div>`;
 
   } catch(e) {
-    const q = encodeURIComponent(`${district} ${state} weather flood cyclone heatwave 2025`);
+    const q = encodeURIComponent(`${district} ${state} flood drought heatwave cyclone`);
     newsBody.innerHTML = `
       <div class="news-item">
-        <a class="news-headline" href="https://news.google.com/search?q=${q}" target="_blank" rel="noopener">🔍 Search recent climate &amp; weather events for ${district}, ${state} →</a>
-        <div class="news-meta" style="margin-top:0.25rem;"><span>Google News · Last 12 months</span></div>
+        <a class="news-headline" href="https://news.google.com/search?q=${q}&hl=en-IN&gl=IN&ceid=IN:en" target="_blank" rel="noopener">🔍 Search climate events for ${district}, ${state} →</a>
+        <div class="news-meta" style="margin-top:0.25rem;"><span>Google News · Live results</span></div>
       </div>
       <div class="news-item">
-        <a class="news-headline" href="https://mausam.imd.gov.in/" target="_blank" rel="noopener">🌦 India Meteorological Department — Latest Warnings &amp; Bulletins →</a>
-        <div class="news-meta"><span>imd.gov.in · Official source</span></div>
+        <a class="news-headline" href="https://mausam.imd.gov.in/" target="_blank" rel="noopener">🌦 IMD — Latest Warnings &amp; Bulletins →</a>
+        <div class="news-meta"><span>imd.gov.in</span></div>
       </div>
       <div class="news-item">
-        <a class="news-headline" href="https://ndma.gov.in/Natural-Hazards" target="_blank" rel="noopener">🚨 National Disaster Management Authority — Active Alerts →</a>
-        <div class="news-meta"><span>ndma.gov.in · Official source</span></div>
+        <a class="news-headline" href="https://ndma.gov.in/Natural-Hazards" target="_blank" rel="noopener">🚨 NDMA — Disaster Alerts →</a>
+        <div class="news-meta"><span>ndma.gov.in</span></div>
       </div>`;
   }
 }
+
 function getHazardColor(type){
   const map = {flood:'#1565c0', heat:'#c0392b', cyclone:'#6b21a8', drought:'#b8860b', fire:'#c0392b', storm:'#1a3a5c', other:'#4a453d'};
   return map[type] || '#4a453d';
@@ -3760,7 +4076,7 @@ async function showStateLevel(stateName){
           });
           if(stateFeats.length){
             const stateBg=L.geoJSON({type:'FeatureCollection',features:stateFeats},{
-              style:{color:'#94a3b8',weight:2,fillColor:'#dde4f0',fillOpacity:1.0,interactive:false}
+              style:{color:'#94a3b8',weight:1,fillColor:'#dde4f0',fillOpacity:0.3,interactive:false}
             });
             stateBg.addTo(lg);
             stateBg.bringToBack();
@@ -3773,7 +4089,7 @@ async function showStateLevel(stateName){
         style:feat=>{
           const gd=feat.properties.district||feat.properties.NAME_2||'';
           const matched=matchDist(gd);
-          return {color:'#fff',weight:1.5,fillColor:matched?(colorMap[matched]||'#64748b'):'#64748b',fillOpacity:0.6};
+          return {color:'rgba(0,0,0,0.2)',weight:0.5,fillColor:matched?(colorMap[matched]||'#64748b'):'#64748b',fillOpacity:0.65};
         },
         onEachFeature:(feat,layer)=>{
           const gd=getDist(feat)||'Unknown';
@@ -3862,19 +4178,25 @@ async function showDistrictLevel(stateName, districtName){
     if(features.length>0){
       const lg=L.layerGroup();
 
-      // ── Solid base using simplified geojson bbox — covers all visible pin areas ──
-      if(geojsonFeatures && features.length){
+      // ── District base layer — perfectly tiled, zero inter-polygon gaps ──
+      if(districtFeatures && features.length){
         try{
           const b=L.geoJSON({type:'FeatureCollection',features:features}).getBounds();
-          const pad=0.25;
-          const baseFeats=geojsonFeatures.filter(f=>{
-            const lat=f.properties.lat||0, lon=f.properties.lon||0;
-            return lat>=(b.getSouth()-pad)&&lat<=(b.getNorth()+pad)&&
-                   lon>=(b.getWest()-pad)&&lon<=(b.getEast()+pad);
+          const pad=0.3;
+          const baseDists=districtFeatures.filter(f=>{
+            const geom=f.geometry; if(!geom) return false;
+            const coords=geom.type==='Polygon'?geom.coordinates[0]:
+              geom.type==='MultiPolygon'?geom.coordinates[0][0]:[];
+            if(!coords.length) return false;
+            const lats=coords.map(c=>c[1]),lons=coords.map(c=>c[0]);
+            const cLat=(Math.min(...lats)+Math.max(...lats))/2;
+            const cLon=(Math.min(...lons)+Math.max(...lons))/2;
+            return cLat>=(b.getSouth()-pad)&&cLat<=(b.getNorth()+pad)&&
+                   cLon>=(b.getWest()-pad)&&cLon<=(b.getEast()+pad);
           });
-          if(baseFeats.length){
-            const bgPinLayer=L.geoJSON({type:'FeatureCollection',features:baseFeats},{
-              style:{color:'#b0bec5',weight:0.5,fillColor:'#c8d4e8',fillOpacity:1.0,interactive:false}
+          if(baseDists.length){
+            const bgPinLayer=L.geoJSON({type:'FeatureCollection',features:baseDists},{
+              style:{color:'#b0bec5',weight:0.5,fillColor:'#dde4f0',fillOpacity:0.35,interactive:false}
             });
             bgPinLayer.addTo(lg);
             bgPinLayer.bringToBack();
@@ -3887,7 +4209,7 @@ async function showDistrictLevel(stateName, districtName){
         style:feat=>{
           const pin=String(feat.properties.pincode||feat.properties.pin_code||'');
           const sub=pinToSub[pin];
-          return {color:'#fff',weight:1,fillColor:sub?sub.color:'#94a3b8',fillOpacity:0.65};
+          return {color:'rgba(0,0,0,0.2)',weight:0.5,fillColor:sub?sub.color:'#94a3b8',fillOpacity:0.7};
         },
         onEachFeature:(feat,layer)=>{
           const pin=String(feat.properties.pincode||feat.properties.pin_code||'');
@@ -4014,20 +4336,25 @@ async function showPinLevel(stateName, districtName, subdistrict){
   const lg=L.layerGroup();
   drilldownPinLayer=lg;
 
-  // ── Solid base using simplified geojson bbox — covers all visible pin areas ──
-  // Use bbox of the district pins + padding to capture edge-crossing neighbours.
-  if(geojsonFeatures && all.length){
+  // ── District base layer — perfectly tiled, zero inter-polygon gaps ──
+  if(districtFeatures && all.length){
     try{
       const b=L.geoJSON({type:'FeatureCollection',features:all}).getBounds();
-      const pad=0.25;
-      const baseFeats=geojsonFeatures.filter(f=>{
-        const lat=f.properties.lat||0, lon=f.properties.lon||0;
-        return lat>=(b.getSouth()-pad)&&lat<=(b.getNorth()+pad)&&
-               lon>=(b.getWest()-pad)&&lon<=(b.getEast()+pad);
+      const pad=0.3;
+      const baseDists=districtFeatures.filter(f=>{
+        const geom=f.geometry; if(!geom) return false;
+        const coords=geom.type==='Polygon'?geom.coordinates[0]:
+          geom.type==='MultiPolygon'?geom.coordinates[0][0]:[];
+        if(!coords.length) return false;
+        const lats=coords.map(c=>c[1]),lons=coords.map(c=>c[0]);
+        const cLat=(Math.min(...lats)+Math.max(...lats))/2;
+        const cLon=(Math.min(...lons)+Math.max(...lons))/2;
+        return cLat>=(b.getSouth()-pad)&&cLat<=(b.getNorth()+pad)&&
+               cLon>=(b.getWest()-pad)&&cLon<=(b.getEast()+pad);
       });
-      if(baseFeats.length){
-        const bgLyr=L.geoJSON({type:'FeatureCollection',features:baseFeats},{
-          style:{color:'#b0bec5',weight:0.5,fillColor:'#c8d4e8',fillOpacity:1.0,interactive:false}
+      if(baseDists.length){
+        const bgLyr=L.geoJSON({type:'FeatureCollection',features:baseDists},{
+          style:{color:'#b0bec5',weight:0.5,fillColor:'#dde4f0',fillOpacity:0.35,interactive:false}
         });
         bgLyr.addTo(lg);
         bgLyr.bringToBack();
@@ -4043,14 +4370,14 @@ async function showPinLevel(stateName, districtName, subdistrict){
         const pin=String(feat.properties.pincode||feat.properties.pin_code||'');
         const sc=scoreData?scoreData.get(pin):null;
         let fill='#94a3b8';
-        if(sc){let ws=0,wt=0;SCORE_FILES.forEach(cfg=>{const v=sc[cfg.col];if(v!=null&&!isNaN(v)){ws+=v*cfg.weight;wt+=cfg.weight;}});if(wt>0)fill=riskLevel(ws/wt).hex;}
-        return {color:'#fff',weight:1.2,fillColor:fill,fillOpacity:0.75};
+        if(sc){let ws=0,wt=0;SCORE_FILES.forEach(cfg=>{const v=sc[cfg.col];if(v!=null&&!isNaN(v)){ws+=v;wt++;}});if(wt>0)fill=riskLevel(ws/wt).hex;}
+        return {color:'rgba(0,0,0,0.2)',weight:0.5,fillColor:fill,fillOpacity:0.75};
       },
       onEachFeature:(feat,layer)=>{
         const pin=String(feat.properties.pincode||feat.properties.pin_code||'');
         const sc=scoreData?scoreData.get(pin):null;
         let riskTxt='';
-        if(sc){let ws=0,wt=0;SCORE_FILES.forEach(cfg=>{const v=sc[cfg.col];if(v!=null&&!isNaN(v)){ws+=v*cfg.weight;wt+=cfg.weight;}});if(wt>0){const rl=riskLevel(ws/wt);riskTxt=' — <span style="color:'+rl.hex+';font-weight:600;">'+rl.label+'</span>';}}
+        if(sc){let ws=0,wt=0;SCORE_FILES.forEach(cfg=>{const v=sc[cfg.col];if(v!=null&&!isNaN(v)){ws+=v;wt++;}});if(wt>0){const rl=riskLevel(ws/wt);riskTxt=' — <span style="color:'+rl.hex+';font-weight:600;">'+rl.label+'</span>';}}
         const officeName=feat.properties.office_name||'';
         layer.bindTooltip(
           '<b>'+pin+'</b>'+(officeName?' — '+officeName:'')+riskTxt+
@@ -4077,7 +4404,7 @@ async function showPinLevel(stateName, districtName, subdistrict){
     if(!mpd||!mpd.lat||!mpd.lon) return;
     const sc=scoreData?scoreData.get(pin):null;
     let fill='#94a3b8';
-    if(sc){let ws=0,wt=0;SCORE_FILES.forEach(cfg=>{const v=sc[cfg.col];if(v!=null&&!isNaN(v)){ws+=v*cfg.weight;wt+=cfg.weight;}});if(wt>0)fill=riskLevel(ws/wt).hex;}
+    if(sc){let ws=0,wt=0;SCORE_FILES.forEach(cfg=>{const v=sc[cfg.col];if(v!=null&&!isNaN(v)){ws+=v;wt++;}});if(wt>0)fill=riskLevel(ws/wt).hex;}
     L.circleMarker([mpd.lat,mpd.lon],{radius:7,color:'#fff',fillColor:fill,fillOpacity:0.9,weight:2})
       .bindTooltip(
         '<b>'+pin+'</b> — '+(mpd.office_name||'')+
@@ -4121,19 +4448,7 @@ function updateBreadcrumb(){
 // Cache per-state geojsons — loaded once, reused across levels
 const stateGeoCache = {};
 
-async function fetchWithTimeout(url, ms=30000){
-  const ctrl=new AbortController(), t=setTimeout(()=>ctrl.abort(),ms);
-  try{
-    const r=await fetch(url,{signal:ctrl.signal});
-    clearTimeout(t);
-    if(!r.ok) throw new Error('HTTP '+r.status+' '+url);
-    return r;
-  }catch(e){
-    clearTimeout(t);
-    if(e.name==='AbortError') throw new Error('Timed out: '+url);
-    throw e;
-  }
-}
+// fetchWithTimeout is defined earlier — single merged version handles all call signatures
 
 function matchStateName(geoName){
   if(!drilldownIndex||!geoName) return null;
@@ -4227,13 +4542,16 @@ async function showNearbyPins(radiusKm){
       if(dist<=r) nearbyMap.set(pin,{dist, state:(row[sk]||'').trim(), district:(row[dk]||'').trim()});
     }
   }
-  if(!nearbyMap.size){
-    document.getElementById('nearby-count').textContent='No PINs within '+r+'km'; return;
-  }
+  // Sort by distance and cap at 40 nearest — avoids overwhelming the map
+  const sortedNearby = [...nearbyMap.entries()].sort((a,b)=>a[1].dist-b[1].dist).slice(0,40);
+  const nearbyMapCapped = new Map(sortedNearby);
 
-  // Group by state|district to batch-load geo files
+  document.getElementById('nearby-count').textContent =
+    `${nearbyMap.size} surveyed PINs within ${r}km` + (nearbyMap.size>40 ? ` · showing 40 nearest` : '');
+
+  // Group capped set by district
   const byDistrict=new Map();
-  for(const [pin,info] of nearbyMap){
+  for(const [pin,info] of nearbyMapCapped){
     const key=info.state+'||'+info.district;
     if(!byDistrict.has(key)) byDistrict.set(key,{state:info.state,district:info.district,pins:[]});
     byDistrict.get(key).pins.push(pin);
@@ -4241,8 +4559,7 @@ async function showNearbyPins(radiusKm){
 
   // Load district geo files (cached) and collect features
   const realF=[],vorF=[],apxF=[];
-  // First pass: collect all features per pin
-  const allByPin=new Map(); // pin -> [features]
+  const allByPin=new Map();
   for(const [mapKey,{state,district,pins}] of byDistrict){
     const pinSet=new Set(pins);
     let loaded=false;
@@ -4292,23 +4609,23 @@ async function showNearbyPins(radiusKm){
     style:feat=>{
       const p=feat.properties;
       const pin=normPin(p.pin_code||p.pincode||p.PIN||'');
-      const info=nearbyMap.get(pin)||{};
       const sc=scoreData?scoreData.get(pin):null;
       let fill='#94a3b8';
       if(sc){let ws=0,wt=0;for(const cfg of SCORE_FILES){const v=sc[cfg.col];if(v!=null&&!isNaN(v)){ws+=v*cfg.weight;wt+=cfg.weight;}}if(wt>0)fill=riskLevel(ws/wt).hex;}
-      return {color:'#fff',weight:1,fillColor:fill,fillOpacity:0.45};
+      // Use thin dark border — no white borders which create fake gaps
+      return {color:'rgba(0,0,0,0.25)',weight:0.5,fillColor:fill,fillOpacity:0.82};
     },
     onEachFeature:(feat,layer)=>{
       const p=feat.properties;
       const pin=normPin(p.pin_code||p.pincode||p.PIN||'');
-      const info=nearbyMap.get(pin)||{};
+      const info=nearbyMapCapped.get(pin)||{};
       const km=info.dist?info.dist.toFixed(1):'?';
       const sc=scoreData?scoreData.get(pin):null;
       let riskTxt='';
       if(sc){let ws=0,wt=0;for(const cfg of SCORE_FILES){const v=sc[cfg.col];if(v!=null&&!isNaN(v)){ws+=v*cfg.weight;wt+=cfg.weight;}}if(wt>0){const rl=riskLevel(ws/wt);riskTxt=' &mdash; <span style="color:'+rl.hex+';font-weight:600;">'+rl.label+'</span>';}}
       layer.bindTooltip('<b>PIN '+pin+'</b> ('+km+'km)'+riskTxt+'<br><span style="font-size:0.72em;">Click to analyse</span>',{sticky:true,className:'drill-tooltip'});
       layer.on({
-        mouseover:e=>e.target.setStyle({fillOpacity:0.8,weight:2}),
+        mouseover:e=>e.target.setStyle({fillOpacity:0.9,weight:1.5,color:'#333'}),
         mouseout: e=>nearbyLayer.resetStyle(e.target),
         click:()=>{document.getElementById('pin-input').value=pin;handleSearch();}
       });
@@ -4316,26 +4633,12 @@ async function showNearbyPins(radiusKm){
   }).addTo(leafletMap);
 
 
-  // ── Solid base layer using simplified geojson bbox — covers ALL visible pins ──
-  // Uses bbox (centerLat ± r/111 + padding) so edge-crossing polygons outside
-  // the radius but visible in the viewport are also covered. Zero white gaps.
-  if(geojsonFeatures){
-    const degPad=(r/111)+0.25;
-    const baseFeats=geojsonFeatures.filter(f=>{
-      const lat=f.properties.lat||0, lon=f.properties.lon||0;
-      return lat>=(centerLat-degPad)&&lat<=(centerLat+degPad)&&
-             lon>=(centerLon-degPad)&&lon<=(centerLon+degPad);
-    });
-    if(baseFeats.length){
-      nearbyBgLayer=L.geoJSON({type:'FeatureCollection',features:baseFeats},{
-        style:{color:'#b0bec5',weight:0.5,fillColor:'#c8d4e8',fillOpacity:1.0,interactive:false}
-      }).addTo(leafletMap);
-      nearbyBgLayer.bringToBack();
-    }
-  }
-
+  // No district background in nearby view — PIN polygons render directly on map tiles
+  // This avoids the "gaps show blue district fill" problem
   document.getElementById('nearby-count').textContent=
-    realF.length+' surveyed PINs within '+r+'km';
+    nearbyMapCapped.size < nearbyMap.size
+      ? `${nearbyMap.size} surveyed PINs within ${r}km · showing ${nearbyMapCapped.size} nearest`
+      : `${nearbyMap.size} surveyed PINs within ${r}km`;
 }
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
